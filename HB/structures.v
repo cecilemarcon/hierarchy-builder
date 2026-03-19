@@ -1,4 +1,8 @@
 (* Support constants, to be kept in sync with shim/structures.v *)
+
+Set Warnings "-elpi.flex-clause".
+
+
 From Corelib Require Import ssreflect ssrfun.
 
 Add Search Blacklist "Builders_".
@@ -1209,6 +1213,119 @@ check-or-not Skel :-
 }}.
 Elpi Typecheck.
 Elpi Export HB.check.
+
+
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+
+
+(* #[arguments(raw)] Elpi Command HB.interface.
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/export.elpi".
+Elpi Accumulate File "HB/factory.elpi".
+Elpi Accumulate File "HB/interface.elpi".
+Elpi Accumulate lp:{{
+
+:name "start"
+main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
+
+}}.
+#[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
+#[synterp] Elpi Accumulate Db export.db.
+(* HERE *)
+#[synterp] Elpi Accumulate lp:{{
+
+shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-module }.
+
+pred actions i:id.
+actions N :-
+  begin-module N none,
+    begin-section N,
+    end-section,
+    begin-module "Exports" none,
+    end-module E,
+  end-module _,
+  export-module E,
+  coq.env.current-library File,
+  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
+
+main [indt-decl D] :- record-decl->id D N, with-attributes (actions N).
+
+main _ :-
+  coq.error "Usage: HB.interface Record <MixinName> T of F A & … := { … }.".
+}}.
+Elpi Typecheck.
+Elpi Export HB.interface.
+
+HB.interface Record lol T := {x:T}. *)
+
+#[arguments(raw)] Elpi Command HB.interface.
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/export.elpi".
+Elpi Accumulate File "HB/factory.elpi".
+Elpi Accumulate File "HB/interface.elpi".
+Elpi Accumulate lp:{{
+
+:name "start"
+main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
+
+}}.
+#[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
+#[synterp] Elpi Accumulate Db export.db.
+(* HERE *)
+#[synterp] Elpi Accumulate lp:{{
+
+shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-module }.
+
+pred actions i:id.
+actions N :-
+  begin-module N none,
+    begin-section N,
+    end-section,
+    begin-module "Exports" none,
+    end-module E,
+  end-module _,
+  export-module E,
+  coq.env.current-library File,
+  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
+
+main [indt-decl D] :- coq.say "yayyy", record-decl->id D N, with-attributes (actions N).
+type interface.main (func).
+main _ :-
+  coq.say "hey Cécile!", interface.main.
+}}.
+
+Elpi Typecheck.
+Elpi Export HB.interface. 
+
+(* TEST C2CILE *)
+(* HB.interface "duh".
+
+HB.interface "duh".
+
+HB.interface.  *)
+(* TEST C2CILE *)
 
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)

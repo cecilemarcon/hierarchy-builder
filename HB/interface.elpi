@@ -1,0 +1,5 @@
+namespace interface {
+pred main.
+main :-
+    coq.say "hey to you too".
+}
