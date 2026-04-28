@@ -1,3 +1,5 @@
+Set Warnings "-elpi.flex-clause".
+
 (* Support constants, to be kept in sync with shim/structures.v *)
 From Corelib Require Import ssreflect ssrfun.
 
@@ -784,22 +786,32 @@ Elpi Accumulate File "HB/common/log.elpi".
 Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
-Elpi Accumulate lp:{{
+#[verbose] Elpi Accumulate lp:{{
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
   with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _)).
+main [str "Program", const-decl Name (some BodySkel) TyWPSkel] :- !,
+  coq.say "\n Program detected \n",
+  with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _)).
 main [T0, F0] :- !,
   coq.warning "HB" "HB.deprecated" "The syntax \"HB.instance Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
   with-attributes (with-logging (instance.declare-existing T0 F0)).
-
+main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl Name (some Body) TyWP) :- 
+  std.assert-ok! (coq.elaborate-arity-skeleton TyWPSkel _ TyWP) "Definition type illtyped",
+  coq.arity->term TyWP Ty,
+  std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",
+  coq.ltac.collect-goals Body List L2,
+  coq.say List,
+  coq.say L2,
+  std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "parameters not handled" .
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
 shorten coq.env.{ begin-section, end-section }.
 
-main [const-decl _ _ (arity _)] :- !.
-main [const-decl _ _ (parameter _ _ _ _)] :- !,
+main [const-decl _ _ (arity _)] :- !, coq.say "\n arity\n".
+main [const-decl _ _ (parameter _ _ _ _)] :- !, coq.say "\n parameter\n",
   SectionName is "hb_instance_" ^ {std.any->string {new_int} },
   begin-section SectionName, end-section.
 main [_, _] :- !.
@@ -807,7 +819,34 @@ main [_, _] :- !.
 main _ :- coq.error "Usage: HB.instance Definition <Name> := <Builder> T ...".
 }}.
 Elpi Typecheck.
+#[proof(begin_if="interactive")]
 Elpi Export HB.instance.
+
+
+
+#[arguments(raw)] Elpi Command HB.endinstance.
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+#[verbose] Elpi Accumulate lp:{{
+  main-interp-qed _ _ Proof (const-decl Name (some Body) TyWP) :-
+    Body = app [Head, Arg1, _],
+    NewBody = app [Head, Arg1, Proof],
+    with-attributes (with-logging (instance.declare-const Name NewBody TyWP _ _)).
+}}.
+
+#[proof="end"] 
+Elpi Export HB.endinstance.
+
+
+
 
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
