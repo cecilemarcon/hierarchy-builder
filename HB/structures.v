@@ -786,7 +786,7 @@ Elpi Accumulate File "HB/common/log.elpi".
 Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
-#[verbose] Elpi Accumulate lp:{{
+Elpi Accumulate lp:{{
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
@@ -801,17 +801,23 @@ main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl 
   std.assert-ok! (coq.elaborate-arity-skeleton TyWPSkel _ TyWP) "Definition type illtyped",
   coq.arity->term TyWP Ty,
   std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",
-  coq.ltac.collect-goals Body List L2,
-  coq.say List,
-  coq.say L2,
-  std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "parameters not handled" .
+  coq.ltac.collect-goals Body _ _,
+  % std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "there is not exactly one hole".
+  coq.ltac.collect-simple-goals Body LG _,
+  coq.say "\n List of goals:" LG,
+  if (LG = [])
+    (coq.error "There are no goals to prove interactively, you can remove the \"interactive\" attribute.\n")
+    (coq.say "there is at least one goal",
+     if (LG = [goal _Ctx _ Goal _ _])
+       (coq.say "There is just one goal which is:" Goal "\n")
+       (coq.error "there is more than one goal, and this is not handled yet")).
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
 shorten coq.env.{ begin-section, end-section }.
 
-main [const-decl _ _ (arity _)] :- !, coq.say "\n arity\n".
-main [const-decl _ _ (parameter _ _ _ _)] :- !, coq.say "\n parameter\n",
+main [const-decl _ _ (arity _)] :- !.
+main [const-decl _ _ (parameter _ _ _ _)] :- !,
   SectionName is "hb_instance_" ^ {std.any->string {new_int} },
   begin-section SectionName, end-section.
 main [_, _] :- !.

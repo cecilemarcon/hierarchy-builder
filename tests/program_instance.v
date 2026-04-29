@@ -1,43 +1,110 @@
 From HB Require Import structures.
+From Stdlib Require Import ZArith.
 
 HB.mixin Record m1 T := { default1 : T }.
 HB.structure Definition s1  := { T of m1 T }.
 
-HB.mixin Record m2 T := { default2 : T }.
+HB.mixin Record m2 T := { default2 : T ; default2b : T }.
+(* HB.mixin Record m2 T := { default2 : T ; ax2 : exists t:T, t <> t }. *)
 HB.structure Definition s2 := { T of m1 T & m2 T }.
 
-HB.mixin Record m3 T := { default3 : T }.
-HB.structure Definition s3 := { T of m3 T }.
+HB.factory Record m3 T := { default3 : T }.
+(*
+HB.builders Context T of m3 T.
+HB.instance Definition _ := m1.Build T default3.
+#[verbose,interactive] HB.instance Definition _ := m2.Build T _  _.
+exact default3.
+HB.endinstance.
+HB.end. *)
+
+(* HB.structure Definition s3 := { T of m3 T }. *)
 
 
 
-HB.instance Program Definition _ : m1 nat := m1.Build nat 1.
-(* #[verbose] HB.instance Program Definition _ : m3 nat := m3.Build nat 3. *)
-(* #[verbose,program] HB.instance Definition _ : m1 nat := m1.Build nat 1. *)
+(* HB.instance Program Definition _ : m1 nat := m1.Build nat 1. *)
 
+#[interactive] HB.instance Definition _ : m1 nat := m1.Build nat _.
+exact 1.
+HB.endinstance.
 
-#[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat _.
+(* #[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat 2 _.
 Show.
 exact 2.
 (* Defined. *)
-HB.endinstance.
+HB.endinstance.  *)
 
-(* #[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat 2. *)
+Fail #[interactive] HB.instance Definition _ : m3 nat := m3.Build nat 3.
 
 
 (* HB.about nat. *)
-(* HB.instance Definition _ : m2 nat := m2.Build nat 2. *)
-
-(* #[verbose,interactive] HB.instance Definition _ {a:nat} : m3 nat := m3.Build nat _. *)
 
 
-(* HB.about nat.
-(* here it works *)
-HB.saturate.
-HB.about nat. all there *)
-
-(* Check @default1 nat.
-Check @default2 nat.
-Check @default3 nat. *)
 
 
+
+(* FACTORY STUFF *)
+(* 
+HB.mixin Record isSemiGroup T := {
+    op : T -> T -> T;
+    opA : forall x y z, op x (op y z) = op (op x y) z
+  }.    
+HB.structure Definition SemiGroup := {T of isSemiGroup T}.
+
+HB.mixin Record semiGroup_isGroup T of isSemiGroup T := {
+    e : T;
+    idl : forall x, op e x = x;
+    idr : forall x, op x e = x;
+    invl : forall x, exists xinv, op x xinv = e;
+    invr : forall x, exists xinv, op xinv x = e;
+}.
+HB.structure Definition Group := {T of isSemiGroup T & semiGroup_isGroup T}.
+
+
+(* Factory: New definition of group *)
+HB.factory Record isGroup T := {
+    op : T -> T -> T;
+    opA' : forall x y z, op (op x y) z = op x (op y z);
+    e : T;
+    idl' : forall x, op e x = x;
+    idr : forall x, op x e = x;
+    invl : forall x, exists xinv, op x xinv = e;
+    invr : forall x, exists xinv, op xinv x = e;
+    default : T
+}.
+
+
+HB.about isGroup.
+
+HB.builders Context T of isGroup T.
+#[verbose,interactive] HB.instance Definition _ := isSemiGroup.Build T op _.
+(* simpl in fresh_name_96. *)
+(* unfold isGroup.phant_axioms in fresh_name_96. *)
+(* simpl in fresh_name_96. *)
+(* edestruct fresh_name_96. *)
+simpl. intros.
+rewrite opA'. 
+reflexivity.
+HB.endinstance.
+HB.instance Definition _ := semiGroup_isGroup.Build T e idl' idr invl invr.
+HB.end.
+
+HB.about isGroup.
+
+Fail HB.structure Definition Group2 := {T of isGroup T &}.
+
+Lemma left_id (T : Group.type) (x y : T) : op e x = x.
+  Proof. apply idl. Qed.
+
+
+HB.instance  Definition _ := isSemiGroup.Build Z Z.add Z.add_assoc.
+
+HB.instance Definition _ := isSemiGroup.Build Z Z.add Z.add_assoc.
+HB.about Z.
+
+Lemma Zaddel :  forall x:Z, exists xinv:Z, Z.add x xinv = 0%Z.
+  Proof. intros. exists (Z.opp x). apply Z.add_opp_diag_r. Qed.
+Lemma Zadder :  forall x:Z, exists xinv:Z, Z.add xinv x = 0%Z.
+  Proof. intros. exists (Z.opp x). apply Z.add_opp_diag_l. Qed.
+HB.instance Definition _ := semiGroup_isGroup.Build Z 0%Z Z.add_0_l Z.add_0_r Zaddel Zadder.
+HB.about Z.
+ *)
