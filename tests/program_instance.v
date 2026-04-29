@@ -9,13 +9,13 @@ HB.mixin Record m2 T := { default2 : T ; default2b : T }.
 HB.structure Definition s2 := { T of m1 T & m2 T }.
 
 HB.factory Record m3 T := { default3 : T }.
-(*
+
 HB.builders Context T of m3 T.
 HB.instance Definition _ := m1.Build T default3.
-#[verbose,interactive] HB.instance Definition _ := m2.Build T _  _.
+#[verbose,interactive] HB.instance Definition _ := m2.Build T default3 _.
 exact default3.
 HB.endinstance.
-HB.end. *)
+HB.end.
 
 (* HB.structure Definition s3 := { T of m3 T }. *)
 
@@ -40,7 +40,15 @@ Show.
 (* Defined. *)
 HB.endinstance. 
 
-Fail #[interactive] HB.instance Definition _ : m3 nat := m3.Build nat 3.
+Fail #[interactive] HB.instance Definition _ : m1 Z := m1.Build Z 3%Z.
+
+
+#[interactive] HB.instance Definition _ : m3 Z := m3.Build Z _.
+exact 3%Z.
+HB.endinstance.
+HB.about Z.
+
+
 
 
 HB.about nat.
