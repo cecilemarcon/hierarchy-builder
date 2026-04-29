@@ -801,7 +801,8 @@ main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl 
   std.assert-ok! (coq.elaborate-arity-skeleton TyWPSkel _ TyWP) "Definition type illtyped",
   coq.arity->term TyWP Ty,
   std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",
-  coq.ltac.collect-goals Body _ _,
+  coq.say "bodyy: " Body,
+  % coq.ltac.collect-goals Body _ _,
   % std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "there is not exactly one hole".
   coq.ltac.collect-simple-goals Body LG _,
   coq.say "\n List of goals:" LG,
@@ -810,7 +811,8 @@ main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl 
     (coq.say "there is at least one goal",
      if (LG = [goal _Ctx _ Goal _ _])
        (coq.say "There is just one goal which is:" Goal "\n")
-       (coq.error "there is more than one goal, and this is not handled yet")).
+       (coq.error "there is more than one goal, and this is not handled yet")),
+  coq.say "body before send off: " Body.
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
@@ -842,9 +844,16 @@ Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 #[verbose] Elpi Accumulate lp:{{
+  pred replace-last i:list term, i:term, o:list term.
+    replace-last [_] Proof [Proof].
+    replace-last [X | XS] Proof [X | YS] :-
+      replace-last XS Proof YS.
+
   main-interp-qed _ _ Proof (const-decl Name (some Body) TyWP) :-
-    Body = app [Head, Arg1, _],
-    NewBody = app [Head, Arg1, Proof],
+    coq.say "received this body : " Body,
+    Body = app LBody,
+    replace-last LBody Proof LNewBody,
+    NewBody = app LNewBody,
     with-attributes (with-logging (instance.declare-const Name NewBody TyWP _ _)).
 }}.
 

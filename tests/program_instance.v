@@ -23,20 +23,27 @@ HB.end. *)
 
 (* HB.instance Program Definition _ : m1 nat := m1.Build nat 1. *)
 
-#[interactive] HB.instance Definition _ : m1 nat := m1.Build nat _.
+#[interactive] HB.instance Definition _ : m1 nat := m1.Build _ _.
 exact 1.
 HB.endinstance.
 
-(* #[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat 2 _.
-Show.
+Set Printing Existential Instances.
+#[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat 2 _.
+(* pose (i := ?[n]). *)
+Show Existentials.
 exact 2.
+Unshelve.
+Show Existentials.
+(* pose (i := ?[n]). *)
+
+Show.
 (* Defined. *)
-HB.endinstance.  *)
+HB.endinstance. 
 
 Fail #[interactive] HB.instance Definition _ : m3 nat := m3.Build nat 3.
 
 
-(* HB.about nat. *)
+HB.about nat.
 
 
 
