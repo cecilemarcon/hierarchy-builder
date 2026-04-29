@@ -58,7 +58,7 @@ HB.about nat.
 
 
 (* FACTORY STUFF *)
-(* 
+
 HB.mixin Record isSemiGroup T := {
     op : T -> T -> T;
     opA : forall x y z, op x (op y z) = op (op x y) z
@@ -92,10 +92,6 @@ HB.about isGroup.
 
 HB.builders Context T of isGroup T.
 #[verbose,interactive] HB.instance Definition _ := isSemiGroup.Build T op _.
-(* simpl in fresh_name_96. *)
-(* unfold isGroup.phant_axioms in fresh_name_96. *)
-(* simpl in fresh_name_96. *)
-(* edestruct fresh_name_96. *)
 simpl. intros.
 rewrite opA'. 
 reflexivity.
@@ -122,4 +118,4 @@ Lemma Zadder :  forall x:Z, exists xinv:Z, Z.add xinv x = 0%Z.
   Proof. intros. exists (Z.opp x). apply Z.add_opp_diag_l. Qed.
 HB.instance Definition _ := semiGroup_isGroup.Build Z 0%Z Z.add_0_l Z.add_0_r Zaddel Zadder.
 HB.about Z.
- *)
+
