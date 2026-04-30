@@ -787,12 +787,11 @@ Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate lp:{{
-pred build-and i:list goal, o:term.
-build-and [goal _Ctx _ Goal _ _] Goal.
-build-and [goal _Ctx _ Goal _ _ | Tt] R :-
-  build-and Tt Rt,
+pred build-term-from-goals i:list goal, o:term.
+build-term-from-goals [goal _ _ Goal _ _] Goal.
+build-term-from-goals [goal _ _ Goal _ _ | Tt] R :-
+  build-term-from-goals Tt Rt,
   R = {{ prod lp:Goal lp:Rt }}.
-% Essaie de faire la conjonction de termes d'une liste pour que Goal soit build-and de la liste de goals donnée par collect-simpl-goals 
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
@@ -806,21 +805,8 @@ main [T0, F0] :- !,
 main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl Name (some Body) TyWP) :- 
   std.assert-ok! (coq.elaborate-arity-skeleton TyWPSkel _ TyWP) "Definition type illtyped",
   coq.arity->term TyWP Ty,
-  std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",
-  coq.say "bodyy: " Body,
-  % coq.ltac.collect-goals Body _ _,
-  % std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "there is not exactly one hole".
-  coq.ltac.collect-simple-goals Body LG _,
-  build-and LG Goal,
-  coq.say "\nLG: " LG ", Goal : " Goal"\n".
-  % coq.say "\n List of goals:" LG,
-  % if (LG = [])
-  %   (coq.error "There are no goals to prove interactively, you can remove the \"interactive\" attribute.\n")
-  %   (coq.say "there is at least one goal",
-  %    if (LG = [goal _Ctx _ Goal _ _])
-  %      (coq.say "There is just one goal which is:" Goal "\n")
-  %      (coq.error "there is more than one goal, and this is not handled yet. This will be possible to handle once the API is fixed and one can pass multiple goals to prove.")),
-  % coq.say "body before send off: " Body.
+  std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",coq.ltac.collect-simple-goals Body LG _,
+  build-term-from-goals LG Goal.
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
