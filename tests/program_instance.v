@@ -12,33 +12,34 @@ HB.factory Record m3 T := { default3 : T }.
 
 HB.builders Context T of m3 T.
 HB.instance Definition _ := m1.Build T default3.
-#[verbose,interactive] HB.instance Definition _ := m2.Build T default3 _.
+
+#[verbose,interactive] HB.instance Definition _ := m2.Build T _ _.
+split.
+exact default3.
 exact default3.
 HB.endinstance.
 HB.end.
 
-(* HB.structure Definition s3 := { T of m3 T }. *)
-
-
-
-(* HB.instance Program Definition _ : m1 nat := m1.Build nat 1. *)
 
 #[interactive] HB.instance Definition _ : m1 nat := m1.Build _ _.
 exact 1.
 HB.endinstance.
 
-Set Printing Existential Instances.
-#[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat 2 _.
-(* pose (i := ?[n]). *)
-Show Existentials.
-exact 2.
-Unshelve.
-Show Existentials.
-(* pose (i := ?[n]). *)
+HB.mixin Record mt2 T := { d2 : T ; d2b : d2 = d2; d2bb : d2 = d2 }.
+#[verbose,interactive] HB.instance Definition _ : mt2 nat := mt2.Build nat _ _ _.
+instantiate (1:=0).
+split.
+reflexivity.
+reflexivity.
+HB.endinstance.
 
+#[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat _ _.
 Show.
-(* Defined. *)
-HB.endinstance. 
+split.
+exact 2.
+exact 2.
+HB.endinstance.
+
 
 Fail #[interactive] HB.instance Definition _ : m1 Z := m1.Build Z 3%Z.
 
@@ -91,7 +92,8 @@ HB.factory Record isGroup T := {
 HB.about isGroup.
 
 HB.builders Context T of isGroup T.
-#[verbose,interactive] HB.instance Definition _ := isSemiGroup.Build T op _.
+#[verbose,interactive] HB.instance Definition _ := isSemiGroup.Build T _ _.
+instantiate (1:=op). (*why is the goal not even shelved?*)
 simpl. intros.
 rewrite opA'. 
 reflexivity.

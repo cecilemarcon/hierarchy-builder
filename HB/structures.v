@@ -787,6 +787,12 @@ Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate lp:{{
+pred build-and i:list goal, o:term.
+build-and [goal _Ctx _ Goal _ _] Goal.
+build-and [goal _Ctx _ Goal _ _ | Tt] R :-
+  build-and Tt Rt,
+  R = {{ prod lp:Goal lp:Rt }}.
+% Essaie de faire la conjonction de termes d'une liste pour que Goal soit build-and de la liste de goals donnée par collect-simpl-goals 
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
@@ -805,14 +811,16 @@ main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl 
   % coq.ltac.collect-goals Body _ _,
   % std.assert! (coq.ltac.collect-simple-goals Body [goal _Ctx _ Goal _ _] _) "there is not exactly one hole".
   coq.ltac.collect-simple-goals Body LG _,
-  coq.say "\n List of goals:" LG,
-  if (LG = [])
-    (coq.error "There are no goals to prove interactively, you can remove the \"interactive\" attribute.\n")
-    (coq.say "there is at least one goal",
-     if (LG = [goal _Ctx _ Goal _ _])
-       (coq.say "There is just one goal which is:" Goal "\n")
-       (coq.error "there is more than one goal, and this is not handled yet")),
-  coq.say "body before send off: " Body.
+  build-and LG Goal,
+  coq.say "\nLG: " LG ", Goal : " Goal"\n".
+  % coq.say "\n List of goals:" LG,
+  % if (LG = [])
+  %   (coq.error "There are no goals to prove interactively, you can remove the \"interactive\" attribute.\n")
+  %   (coq.say "there is at least one goal",
+  %    if (LG = [goal _Ctx _ Goal _ _])
+  %      (coq.say "There is just one goal which is:" Goal "\n")
+  %      (coq.error "there is more than one goal, and this is not handled yet. This will be possible to handle once the API is fixed and one can pass multiple goals to prove.")),
+  % coq.say "body before send off: " Body.
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
@@ -844,17 +852,38 @@ Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 #[verbose] Elpi Accumulate lp:{{
+  pred prod->list i:term, o:list term.
+    prod->list {{ pair lp:A lp:B }} L :-
+    coq.say "\n\ni'm seeing a pair\n\n",
+      prod->list B LB,
+      L = [A | LB].
+    prod->list T [T].
+
   pred replace-last i:list term, i:term, o:list term.
     replace-last [_] Proof [Proof].
     replace-last [X | XS] Proof [X | YS] :-
       replace-last XS Proof YS.
 
-  main-interp-qed _ _ Proof (const-decl Name (some Body) TyWP) :-
-    coq.say "received this body : " Body,
-    Body = app LBody,
-    replace-last LBody Proof LNewBody,
-    NewBody = app LNewBody,
-    with-attributes (with-logging (instance.declare-const Name NewBody TyWP _ _)).
+  pred replace-last-one-with-list i:list term, i:list term, o:list term.
+    replace-last-one-with-list [_] Proofs Proofs.
+    replace-last-one-with-list [X | XS] Proofs [X | YS] :-
+      replace-last-one-with-list XS Proofs YS.
+
+  pred replace-last-with-list i:list term, i:list term, o:list term.
+    replace-last-with-list [X | XS] Proofs [X | YS] :-
+      std.length XS XSlength,
+      std.length Proofs Proofslength,
+      % coq.say "XS and its length : " XS XSlength " Proofs and its length : " Proofs Proofslength,
+      if (XSlength = Proofslength)
+        (YS = Proofs)
+        (replace-last-with-list XS Proofs YS).
+
+  main-interp-qed _ _ Proofs (const-decl Name (some Body) TyWP) :-
+    prod->list Proofs LProofs, 
+    Body = app LBody, 
+    replace-last-with-list LBody LProofs NewBody,
+    LNewBody = app NewBody,
+    with-attributes (with-logging (instance.declare-const Name LNewBody TyWP _ _)).
 }}.
 
 #[proof="end"] 
