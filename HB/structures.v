@@ -1,4 +1,7 @@
 (* Support constants, to be kept in sync with shim/structures.v *)
+
+Set Warnings "-elpi.flex-clause".
+
 From Corelib Require Import ssreflect ssrfun.
 
 Add Search Blacklist "Builders_".
@@ -1209,6 +1212,27 @@ check-or-not Skel :-
 }}.
 Elpi Typecheck.
 Elpi Export HB.check.
+
+
+
+
+
+
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+(* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
+
+#[arguments(raw)] Elpi Command HB.interface.
+Elpi Accumulate Db hb.db.
+
+
+Elpi Typecheck.
+Elpi Export HB.interface. 
+
+
+
+
+
 
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
