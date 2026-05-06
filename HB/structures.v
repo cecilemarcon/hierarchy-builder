@@ -1223,7 +1223,30 @@ Elpi Export HB.check.
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
 
 #[arguments(raw)] Elpi Command HB.interface.
-Elpi Accumulate Db hb.db.
+
+(* if nothing : mixin *)
+Elpi Accumulate lp:{{
+:name "start"
+main _ :- 
+  attributes A,
+  coq.say "attributes i :" A
+  coq.parse-attributes A Spec Opts,  
+  coq.say "options i : " Opts,
+  coq.say "spec i : " Spec.
+}}.
+
+#[synterp] Elpi Accumulate lp:{{
+main _ :- 
+  attributes A,
+  coq.say "attributes :" A
+  coq.parse-attributes A Spec Opts,  
+  coq.say "options : " Opts,
+  coq.say "spec : " Spec.
+}}.
+
+
+(* if #alternative : factory *)
+(*    then : proof requirements *)
 
 
 Elpi Typecheck.
