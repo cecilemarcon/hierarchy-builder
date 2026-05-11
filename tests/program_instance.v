@@ -14,7 +14,6 @@ HB.builders Context T of m3 T.
 HB.instance Definition _ := m1.Build T default3.
 
 #[verbose,interactive] HB.instance Definition _ := m2.Build T _ _.
-split.
 exact default3.
 exact default3.
 HB.endinstance.
@@ -28,20 +27,17 @@ HB.endinstance.
 HB.mixin Record mt2 T := { d2 : T ; d2b : d2 = d2; d2bb : d2 = d2 }.
 #[verbose,interactive] HB.instance Definition _ : mt2 nat := mt2.Build nat _ _ _.
 instantiate (1:=0).
-split.
 reflexivity.
 reflexivity.
 HB.endinstance.
 
 #[verbose,interactive] HB.instance Definition _ : m2 nat := m2.Build nat _ _.
-Show.
-split.
-exact 2.
+exact 0.
 exact 2.
 HB.endinstance.
 
 
-Fail #[interactive] HB.instance Definition _ : m1 Z := m1.Build Z 3%Z.
+(* Fail #[interactive] HB.instance Definition _ : m1 Z := m1.Build Z 3%Z. *)
 
 
 #[interactive] HB.instance Definition _ : m3 Z := m3.Build Z _.

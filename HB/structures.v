@@ -787,11 +787,6 @@ Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate lp:{{
-pred build-term-from-goals i:list goal, o:term.
-build-term-from-goals [goal _ _ Goal _ _] Goal.
-build-term-from-goals [goal _ _ Goal _ _ | Tt] R :-
-  build-term-from-goals Tt Rt,
-  R = {{ prod lp:Goal lp:Rt }}.
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
@@ -802,11 +797,11 @@ main [str "Program", const-decl Name (some BodySkel) TyWPSkel] :- !,
 main [T0, F0] :- !,
   coq.warning "HB" "HB.deprecated" "The syntax \"HB.instance Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
   with-attributes (with-logging (instance.declare-existing T0 F0)).
-main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ Goal (const-decl Name (some Body) TyWP) :- 
+main-interp-proof [const-decl Name (some BodySkel) TyWPSkel] _ _ Goal (const-decl Name (some Body) TyWP) :- 
   std.assert-ok! (coq.elaborate-arity-skeleton TyWPSkel _ TyWP) "Definition type illtyped",
   coq.arity->term TyWP Ty,
-  std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",coq.ltac.collect-simple-goals Body LG _,
-  build-term-from-goals LG Goal.
+  std.assert-ok! (coq.elaborate-skeleton BodySkel Ty Body) "Definition illtyped",
+  coq.ltac.collect-goals Body Goal _.
 }}.
 #[synterp] Elpi Accumulate lp:{{
 
@@ -837,23 +832,11 @@ Elpi Accumulate File "HB/common/log.elpi".
 Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
-#[verbose] Elpi Accumulate lp:{{
-  pred prod->list i:term, o:list term.
-    prod->list {{ pair lp:A lp:B }} L :-
-    coq.say "\n\ni'm seeing a pair\n\n",
-      prod->list B LB,
-      L = [A | LB].
-    prod->list T [T].
-
-  pred replace-last i:list term, i:term, o:list term.
-    replace-last [_] Proof [Proof].
-    replace-last [X | XS] Proof [X | YS] :-
-      replace-last XS Proof YS.
-
-  pred replace-last-one-with-list i:list term, i:list term, o:list term.
-    replace-last-one-with-list [_] Proofs Proofs.
-    replace-last-one-with-list [X | XS] Proofs [X | YS] :-
-      replace-last-one-with-list XS Proofs YS.
+Elpi Accumulate lp:{{
+  pred from-sealed-goal-to-term i:list sealed-goal o:list term.
+    from-sealed-goal-to-term [] [].
+    from-sealed-goal-to-term [seal (goal _ (T) _ _ _)|Q] [T|QT] :- 
+      from-sealed-goal-to-term Q QT.
 
   pred replace-last-with-list i:list term, i:list term, o:list term.
     replace-last-with-list [X | XS] Proofs [X | YS] :-
@@ -864,10 +847,10 @@ Elpi Accumulate File "HB/instance.elpi".
         (YS = Proofs)
         (replace-last-with-list XS Proofs YS).
 
-  main-interp-qed _ _ Proofs (const-decl Name (some Body) TyWP) :-
-    prod->list Proofs LProofs, 
+  main-interp-qed _ _ _P GL (const-decl Name (some Body) TyWP) :-
+    from-sealed-goal-to-term GL Tkt,
     Body = app LBody, 
-    replace-last-with-list LBody LProofs NewBody,
+    replace-last-with-list LBody Tkt NewBody,
     LNewBody = app NewBody,
     with-attributes (with-logging (instance.declare-const Name LNewBody TyWP _ _)).
 }}.
