@@ -1226,24 +1226,29 @@ Elpi Export HB.check.
 
 (* if nothing : mixin *)
 Elpi Accumulate lp:{{
+pred alternative-in-attributes i:list attribute. 
+  alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
+  alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
+
 :name "start"
-main _ :- 
+main Arg :- 
+  coq.say "interp",
+  coq.say "Arg : " Arg,
   attributes A,
-  coq.say "attributes i :" A
-  coq.parse-attributes A Spec Opts,  
-  coq.say "options i : " Opts,
-  coq.say "spec i : " Spec.
+  coq.say "attributes i :" A,
+  if (alternative-in-attributes A) 
+    (coq.say "\nalternative is in attributes\n") 
+    (coq.say "\nalternative is not in attributes\n") .
 }}.
 
 #[synterp] Elpi Accumulate lp:{{
-main _ :- 
+main Arg :- 
+  coq.say "synterp",
+  coq.say "Arg : " Arg,
   attributes A,
-  coq.say "attributes :" A
-  coq.parse-attributes A Spec Opts,  
-  coq.say "options : " Opts,
-  coq.say "spec : " Spec.
+  coq.say "attributes :" A.
 }}.
-
+ 
 
 (* if #alternative : factory *)
 (*    then : proof requirements *)
