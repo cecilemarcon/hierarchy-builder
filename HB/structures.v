@@ -1236,8 +1236,6 @@ Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/factory.elpi".
-(* HB.factory *)
-(* if nothing : mixin *)
 Elpi Accumulate lp:{{
 pred alternative-in-attributes i:list attribute. 
   alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
@@ -1245,15 +1243,15 @@ pred alternative-in-attributes i:list attribute.
 
 :name "start"
 main [Arg] :- 
-  % coq.say "interp",
-  % coq.say "Arg : " Arg,
   attributes A,
-  % coq.say "attributes i :" A,
   if (alternative-in-attributes A) 
-    (coq.say "\nalternative is in attributes\n",
-    with-attributes (with-logging (factory.declare Arg))) 
-    (coq.say "\nalternative is not in attributes\n",
-    with-attributes (with-logging (factory.declare-mixin Arg))).
+    (% if no "alternative" attribute, we declare a mixin
+      with-attributes (with-logging (factory.declare Arg))
+    ) 
+    (% if "alternative" attribute, we declare a factory
+     % TODO, generate proof requirements
+      with-attributes (with-logging (factory.declare-mixin Arg))
+    ).
 }}.
 
 
@@ -1280,6 +1278,7 @@ actions N :-
 
 main [indt-decl D] :- record-decl->id D N, with-attributes (actions N).
 main [const-decl N _ _] :- 
+  % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   attributes A, 
   if (alternative-in-attributes A) 
     (with-attributes (actions N)) 
@@ -1289,9 +1288,6 @@ main _ :-
   coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … }.\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
 }}.
  
-
-(* if #alternative : factory *)
-(*    then : proof requirements *)
 
 
 Elpi Typecheck.
