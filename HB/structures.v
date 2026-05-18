@@ -1223,7 +1223,20 @@ Elpi Export HB.check.
 (* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% *)
 
 #[arguments(raw)] Elpi Command HB.interface.
-
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/export.elpi".
+Elpi Accumulate File "HB/factory.elpi".
+(* HB.factory *)
 (* if nothing : mixin *)
 Elpi Accumulate lp:{{
 pred alternative-in-attributes i:list attribute. 
@@ -1231,22 +1244,49 @@ pred alternative-in-attributes i:list attribute.
   alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
 
 :name "start"
-main Arg :- 
-  coq.say "interp",
-  coq.say "Arg : " Arg,
+main [Arg] :- 
+  % coq.say "interp",
+  % coq.say "Arg : " Arg,
   attributes A,
-  coq.say "attributes i :" A,
+  % coq.say "attributes i :" A,
   if (alternative-in-attributes A) 
-    (coq.say "\nalternative is in attributes\n") 
-    (coq.say "\nalternative is not in attributes\n") .
+    (coq.say "\nalternative is in attributes\n",
+    with-attributes (with-logging (factory.declare Arg))) 
+    (coq.say "\nalternative is not in attributes\n",
+    with-attributes (with-logging (factory.declare-mixin Arg))).
 }}.
 
+
+#[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
+#[synterp] Elpi Accumulate Db export.db.
 #[synterp] Elpi Accumulate lp:{{
-main Arg :- 
-  coq.say "synterp",
-  coq.say "Arg : " Arg,
-  attributes A,
-  coq.say "attributes :" A.
+pred alternative-in-attributes i:list attribute. 
+  alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
+  alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
+
+shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-module }.
+
+pred actions i:id.
+actions N :-
+  begin-module N none,
+    begin-section N,
+    end-section,
+    begin-module "Exports" none,
+    end-module E,
+  end-module _,
+  export-module E,
+  coq.env.current-library File,
+  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
+
+main [indt-decl D] :- record-decl->id D N, with-attributes (actions N).
+main [const-decl N _ _] :- 
+  attributes A, 
+  if (alternative-in-attributes A) 
+    (with-attributes (actions N)) 
+    (coq.error "using a const-decl without attribute alternative").
+
+main _ :-
+  coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … }.\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
 }}.
  
 
