@@ -81,6 +81,7 @@ sub-class? (class C1 _ ML1P) (class C2 _ ML2P) :-
 func factory-provides factoryname -> mixins.
 factory-provides FactoryAlias MLwP :- std.do! [
   std.assert-ok! (factory-alias->gref FactoryAlias Factory) "HB",
+  % coq.say "in factory-provideS, Factory = " Factory,
   gref->deps Factory RMLwP,
   w-params.map RMLwP (factory-provides.base Factory) MLwP
 ].
@@ -127,6 +128,7 @@ extract-conclusion-params TheType T R :- whd1 T T1, !, extract-conclusion-params
 func factories-provide list-w-params factoryname -> mixins.
 factories-provide FLwP MLwP :-
   list-w-params.flatten-map FLwP factory-provides UnsortedMLwP,
+  % coq.say "\n in factories-provide : UnsortedMLwP = " UnsortedMLwP "\n",
   w-params.map UnsortedMLwP (p\t\ toposort-mixins) MLwP.
 
 func undup-grefs list gref -> list gref.

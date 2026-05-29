@@ -477,6 +477,7 @@ Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/factory.elpi".
 Elpi Accumulate lp:{{
+%here
 
 :name "start"
 main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
@@ -499,7 +500,6 @@ actions N :-
   export-module E,
   coq.env.current-library File,
   coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
-
 main [indt-decl D] :- record-decl->id D N, with-attributes (actions N).
 
 main _ :-
@@ -663,6 +663,7 @@ Elpi Accumulate lp:{{
 :name "start"
 main [const-decl N (some B) Arity] :- std.do! [
   % compute the universe for the structure (default )
+  coq.say "\nN:" N "\n",
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
   with-attributes (with-logging (structure.declare N B Univ)),
@@ -1237,24 +1238,45 @@ Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/factory.elpi".
 Elpi Accumulate lp:{{
+%Here
 pred alternative-in-attributes i:list attribute. 
   alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
   alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
+
+% TODO : figure out why I don't have access to this function which exists in factory.elpi
+func argument-name argument -> string.
+  argument-name (const-decl Id _ _) Id.
+  argument-name (indt-decl (parameter _ _ _ R)) Id :-
+    argument-name (indt-decl (R (sort prop))) Id.
+  argument-name (indt-decl (record Id _ _ _)) Id.
+  argument-name (indt-decl (inductive Id _ _ _)) Id.
+  argument-name (ctx-decl _) "_" :- !.
 
 :name "start"
 main [Arg] :- 
   attributes A,
   if (alternative-in-attributes A) 
-    (% if no "alternative" attribute, we declare a mixin
-      with-attributes (with-logging (factory.declare Arg))
-    ) 
     (% if "alternative" attribute, we declare a factory
      % TODO, generate proof requirements
+     %check if a mixin of the same name has already been declared 
+      coq.say "Attributes: " A,
+      coq.say "\nalternative attribute detected ! \n",
+      % argument-name Arg ArgNameS, 
+      % coq.string->name ArgNameS ArgName,
+      % if (from _ ArgName _) 
+      %   (coq.error "HB: no declared interface with name " ArgNameS) 
+      %   (coq.say "found an interface with this name already !"),
+      % coq.say "name :" ArgName,
+      with-attributes (with-logging (factory.declare Arg))
+    )
+    (% if no "alternative" attribute, we declare a mixin
+      coq.say "\nno alternative attribute ! \n",
       with-attributes (with-logging (factory.declare-mixin Arg))
-    ).
+      % with-attributes (with-logging (factory.declare Arg))
+    ) .
 }}.
 
-
+ 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
 #[synterp] Elpi Accumulate lp:{{
@@ -1276,13 +1298,16 @@ actions N :-
   coq.env.current-library File,
   coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
 
-main [indt-decl D] :- record-decl->id D N, with-attributes (actions N).
+
+main [indt-decl D] :- 
+  record-decl->id D N, with-attributes (actions N).
+
 main [const-decl N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   attributes A, 
   if (alternative-in-attributes A) 
     (with-attributes (actions N)) 
-    (coq.error "using a const-decl without attribute alternative").
+    (coq.error "HB: using a const-decl without attribute alternative").
 
 main _ :-
   coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … }.\nUsage: HB.interface Definition <interfaceName> T of F A := t.".

@@ -16,7 +16,12 @@ declare Module BSkel Sort :- std.do! [
 
   list-w-params.flatten-map GRFSwP gref->deps RMLwP, % TODO: extract code from factories-provide
   list-w-params.append PMLwP RMLwP UnsortedMLwP,
+  % coq.say "GRFSwP: " GRFSwP "\n",
+  % coq.say "PMLwP: " PMLwP "\n",
+  % coq.say "RMLwP: " RMLwP "\n",
   w-params.map UnsortedMLwP (p\t\ toposort-mixins) MLwP,
+  % coq.say "UnsortedMLwP: " UnsortedMLwP "\n",
+  % coq.say "\nMLwP: " MLwP "\n",
 
   list-w-params_list PMLwP PML,
   list-w-params_list MLwP ML,
