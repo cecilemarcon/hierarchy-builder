@@ -663,7 +663,6 @@ Elpi Accumulate lp:{{
 :name "start"
 main [const-decl N (some B) Arity] :- std.do! [
   % compute the universe for the structure (default )
-  coq.say "\nN:" N "\n",
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
   with-attributes (with-logging (structure.declare N B Univ)),
@@ -1259,15 +1258,16 @@ main [Arg] :-
     (% if "alternative" attribute, we declare a factory
      % TODO, generate proof requirements
      %check if a mixin of the same name has already been declared 
-      coq.say "Attributes: " A,
-      coq.say "\nalternative attribute detected ! \n",
-      % argument-name Arg ArgNameS, 
+      argument-name Arg ArgNameS, 
+      coq.say ArgNameS,
       % coq.string->name ArgNameS ArgName,
-      % if (from _ ArgName _) 
-      %   (coq.error "HB: no declared interface with name " ArgNameS) 
-      %   (coq.say "found an interface with this name already !"),
+      if (from _ MixinName _,
+      coq.gref->id MixinName Id,
+      Id = ArgNameS)
+        (coq.error "HB: no declared interface with name " ArgNameS) 
+        (coq.say "found an interface with this name already !")
       % coq.say "name :" ArgName,
-      with-attributes (with-logging (factory.declare Arg))
+      % with-attributes (with-logging (factory.declare Arg))
     )
     (% if no "alternative" attribute, we declare a mixin
       coq.say "\nno alternative attribute ! \n",
@@ -1276,7 +1276,12 @@ main [Arg] :-
     ) .
 }}.
 
- 
+(* Elpi Query lp:{{
+%  {{:gref isSemiGroup.axioms_}} = X,
+  {{:gref isB.axioms_}} = X,
+  from X Y Z.
+}}.  *)
+
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
 #[synterp] Elpi Accumulate lp:{{
@@ -1300,13 +1305,16 @@ actions N :-
 
 
 main [indt-decl D] :- 
-  record-decl->id D N, with-attributes (actions N).
+  attributes A,
+  if (alternative-in-attributes A) 
+    (coq.say "todo")%record-decl->id D N, with-attributes (actions N)) %{calc (N ^ "FACT")}
+    (record-decl->id D N, with-attributes (actions N)).
 
-main [const-decl N _ _] :- 
+main [const-decl _N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   attributes A, 
   if (alternative-in-attributes A) 
-    (with-attributes (actions N)) 
+    (coq.say "using const, todo")%, with-attributes (actions N)) 
     (coq.error "HB: using a const-decl without attribute alternative").
 
 main _ :-

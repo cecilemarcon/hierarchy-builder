@@ -28,7 +28,6 @@ HB.structure Definition SemiGroup := {T of isSemiGroup T}.
 
 HB.instance  Definition _ := isSemiGroup.Build Z Z.add Z.add_assoc.
 
-Locate op.
 Lemma lestfassoc (T : SemiGroup.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
 
@@ -48,10 +47,10 @@ HB.structure Definition Group := {T of isSemiGroup T & isGroup T}.
 
 
 (* Interface should behave as a factory *)
-#[alternative] HB.interface Record isGroup' T := {
+#[alternative] HB.interface Record isGroup T := {
     op : T -> T -> T;
     opA' : forall x y z, op (op x y) z = op x (op y z);
-    e : T;
+    e : T;  
     idl' : forall x, op e x = x;
     idr : forall x, op x e = x;
     invl : forall x, exists xinv, op x xinv = e;
@@ -59,6 +58,6 @@ HB.structure Definition Group := {T of isSemiGroup T & isGroup T}.
     default : T
 }.
 
-HB.builders Context T of isGroup' T.
+(* HB.builders Context T of isGroup' T.
 HB.instance Definition _ := isSemiGroup.Build T op (fun _ _ _ => eq_sym (opA' _ _ _)).
-HB.end. 
+HB.end.  *)
