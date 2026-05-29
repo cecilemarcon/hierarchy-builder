@@ -58,6 +58,7 @@ HB.structure Definition Group := {T of isSemiGroup T & isGroup T}.
     default : T
 }.
 
-(* HB.builders Context T of isGroup' T.
+HB.builders Context T of isGroupFACT T.
 HB.instance Definition _ := isSemiGroup.Build T op (fun _ _ _ => eq_sym (opA' _ _ _)).
-HB.end.  *)
+
+HB.end.

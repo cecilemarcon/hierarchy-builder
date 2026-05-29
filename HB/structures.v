@@ -1235,7 +1235,7 @@ Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
-Elpi Accumulate File "HB/factory.elpi".
+Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate lp:{{
 %Here
 pred alternative-in-attributes i:list attribute. 
@@ -1261,17 +1261,14 @@ main [Arg] :-
       argument-name Arg ArgNameS, 
       coq.say ArgNameS,
       % coq.string->name ArgNameS ArgName,
-      if (from _ MixinName _,
-      coq.gref->id MixinName Id,
-      Id = ArgNameS)
+      if (from _ MixinName _, coq.gref->id MixinName Id, Id = ArgNameS)
         (coq.error "HB: no declared interface with name " ArgNameS) 
-        (coq.say "found an interface with this name already !")
-      % coq.say "name :" ArgName,
-      % with-attributes (with-logging (factory.declare Arg))
+        (coq.say "found an interface with this name already !",
+        with-attributes (with-logging (interface.declare Arg)))
     )
     (% if no "alternative" attribute, we declare a mixin
       coq.say "\nno alternative attribute ! \n",
-      with-attributes (with-logging (factory.declare-mixin Arg))
+      with-attributes (with-logging (interface.declare-mixin Arg))
       % with-attributes (with-logging (factory.declare Arg))
     ) .
 }}.
@@ -1293,6 +1290,7 @@ shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-m
 
 pred actions i:id.
 actions N :-
+  coq.say "opening module " N,
   begin-module N none,
     begin-section N,
     end-section,
@@ -1307,14 +1305,14 @@ actions N :-
 main [indt-decl D] :- 
   attributes A,
   if (alternative-in-attributes A) 
-    (coq.say "todo")%record-decl->id D N, with-attributes (actions N)) %{calc (N ^ "FACT")}
+    (record-decl->id D N, with-attributes (actions {calc (N ^ "FACT")})) %{calc (N ^ "FACT")}
     (record-decl->id D N, with-attributes (actions N)).
 
-main [const-decl _N _ _] :- 
+main [const-decl N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   attributes A, 
   if (alternative-in-attributes A) 
-    (coq.say "using const, todo")%, with-attributes (actions N)) 
+    (with-attributes (actions {calc (N ^ "FACT")})) 
     (coq.error "HB: using a const-decl without attribute alternative").
 
 main _ :-
