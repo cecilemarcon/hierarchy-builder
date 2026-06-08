@@ -1238,10 +1238,6 @@ Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate lp:{{
 %Here
-pred alternative-in-attributes i:list attribute. 
-  alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
-  alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
-
 % TODO : figure out why I don't have access to this function which exists in factory.elpi
 func argument-name argument -> string.
   argument-name (const-decl Id _ _) Id.
@@ -1253,11 +1249,14 @@ func argument-name argument -> string.
 
 :name "start"
 main [Arg] :- 
-  attributes A,
-  if (alternative-in-attributes A) 
+  attributes A, 
+  coq.say "attributes :" A,
+  with-attributes (
+  if (get-option "alternative" S) 
     (% if "alternative" attribute, we declare a factory
      % TODO, generate proof requirements
      %check if a mixin of the same name has already been declared 
+      coq.say "parsed S" S, 
       argument-name Arg ArgNameS, 
       coq.say ArgNameS,
       % coq.string->name ArgNameS ArgName,
@@ -1267,10 +1266,11 @@ main [Arg] :-
         with-attributes (with-logging (interface.declare Arg)))
     )
     (% if no "alternative" attribute, we declare a mixin
+      % coq.say "parsed S" S, 
       coq.say "\nno alternative attribute ! \n",
       with-attributes (with-logging (interface.declare-mixin Arg))
       % with-attributes (with-logging (factory.declare Arg))
-    ) .
+    )) .
 }}.
 
 (* Elpi Query lp:{{
@@ -1282,9 +1282,6 @@ main [Arg] :-
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
 #[synterp] Elpi Accumulate lp:{{
-pred alternative-in-attributes i:list attribute. 
-  alternative-in-attributes [attribute "alternative" (leaf-str "") | _].
-  alternative-in-attributes [_ | Atts] :- alternative-in-attributes Atts.
 
 shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-module }.
 
@@ -1303,22 +1300,23 @@ actions N :-
 
 
 main [indt-decl D] :- 
-  attributes A,
-  if (alternative-in-attributes A) 
+  % attributes A,
+  with-attributes (
+  if (get-option "alternative" _S) 
     (record-decl->id D N, with-attributes (actions {calc (N ^ "FACT")})) %{calc (N ^ "FACT")}
-    (record-decl->id D N, with-attributes (actions N)).
+    (record-decl->id D N, with-attributes (actions N))).
 
 main [const-decl N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
-  attributes A, 
-  if (alternative-in-attributes A) 
+  with-attributes (
+  if (get-option "alternative" _S) 
     (with-attributes (actions {calc (N ^ "FACT")})) 
-    (coq.error "HB: using a const-decl without attribute alternative").
+    (coq.error "HB: using a const-decl without attribute alternative")).
 
 main _ :-
   coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … }.\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
 }}.
- 
+
 
 
 Elpi Typecheck.

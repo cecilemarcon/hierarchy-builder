@@ -2,13 +2,6 @@ From HB Require Import structures.
 From Stdlib Require Import ZArith.
 
 
-(* #[verbose,alternative,local="this"] HB.interface hey.
-#[alternative] HB.interface hey.
-#[alternative="this"] HB.interface hey. *)
-(* #[verbose] HB.interface only_verbose.
-#[verbose,alternative] HB.interface verbose_alternative.
-#[alternative] HB.interface only_alternative. *)
-(* #[verbose,alternative,local="this"] HB.interface hey. *)
 
 HB.mixin Record isB T := {
     opB : T -> T -> T;
@@ -52,11 +45,11 @@ HB.interface Record ComGroup T of Group T := { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
 }.
 
-HB.structure Definition ComGroupS := {T of ComGroup T &}.
+HB.structure Definition ComGroupS := {T of ComGroup T &}. 
 
 
 
-#[alternative] HB.interface Record ComGroup T  of SemiGroup T:= { (*of SemiGroup T*)
+#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
