@@ -68,5 +68,3 @@ HB.instance Definition _ := isGroup.Build T e idl idr invl invr.
 HB.instance Definition _ := ComGroup.Build T opC.
 
 HB.end.
-
-

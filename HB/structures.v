@@ -1257,6 +1257,11 @@ main [Arg] :-
      % TODO, generate proof requirements
      %check if a mixin of the same name has already been declared 
       coq.say "parsed S" S, 
+      % argument->gref S SG,
+      % coq.gref->string SG SS,
+      if (S = "")
+        (coq.error "give me a name for this factory")
+        (true),
       argument-name Arg ArgNameS, 
       coq.say ArgNameS,
       % coq.string->name ArgNameS ArgName,
