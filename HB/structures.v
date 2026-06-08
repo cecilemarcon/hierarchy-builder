@@ -1257,24 +1257,19 @@ main [Arg] :-
      % TODO, generate proof requirements
      %check if a mixin of the same name has already been declared 
       coq.say "parsed S" S, 
-      % argument->gref S SG,
-      % coq.gref->string SG SS,
       if (S = "")
         (coq.error "give me a name for this factory")
         (true),
       argument-name Arg ArgNameS, 
       coq.say ArgNameS,
-      % coq.string->name ArgNameS ArgName,
       if (from _ MixinName _, coq.gref->id MixinName Id, Id = ArgNameS)
         (coq.error "HB: no declared interface with name " ArgNameS) 
         (coq.say "found an interface with this name already !",
         with-attributes (with-logging (interface.declare S Arg)))
     )
     (% if no "alternative" attribute, we declare a mixin
-      % coq.say "parsed S" S, 
       coq.say "\nno alternative attribute ! \n",
       with-attributes (with-logging (interface.declare-mixin Arg))
-      % with-attributes (with-logging (factory.declare Arg))
     )) .
 }}.
 
@@ -1305,7 +1300,6 @@ actions N :-
 
 
 main [indt-decl D] :- 
-  % attributes A,
   with-attributes (
   if (get-option "alternative" S) 
     (record-decl->id D _N, with-attributes (actions S)) %{calc (N ^ "FACT")}
