@@ -49,7 +49,7 @@ HB.structure Definition ComGroupS := {T of ComGroup T &}.
 
 
 
-#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
+#[verbose,alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
@@ -57,7 +57,7 @@ HB.structure Definition ComGroupS := {T of ComGroup T &}.
 }.
 
 
-HB.builders Context T of ComGroupFACT T.
+HB.builders Context T of ComGroupFromSemiGroup T.
 (* assumption *)
 Lemma invl : forall x, exists xinv, op x xinv = e.
   intros. destruct (invr x). exists x0. rewrite opC. auto. Qed.

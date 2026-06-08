@@ -1263,7 +1263,7 @@ main [Arg] :-
       if (from _ MixinName _, coq.gref->id MixinName Id, Id = ArgNameS)
         (coq.error "HB: no declared interface with name " ArgNameS) 
         (coq.say "found an interface with this name already !",
-        with-attributes (with-logging (interface.declare Arg)))
+        with-attributes (with-logging (interface.declare S Arg)))
     )
     (% if no "alternative" attribute, we declare a mixin
       % coq.say "parsed S" S, 
@@ -1302,15 +1302,15 @@ actions N :-
 main [indt-decl D] :- 
   % attributes A,
   with-attributes (
-  if (get-option "alternative" _S) 
-    (record-decl->id D N, with-attributes (actions {calc (N ^ "FACT")})) %{calc (N ^ "FACT")}
+  if (get-option "alternative" S) 
+    (record-decl->id D _N, with-attributes (actions S)) %{calc (N ^ "FACT")}
     (record-decl->id D N, with-attributes (actions N))).
 
-main [const-decl N _ _] :- 
+main [const-decl _N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   with-attributes (
-  if (get-option "alternative" _S) 
-    (with-attributes (actions {calc (N ^ "FACT")})) 
+  if (get-option "alternative" S) 
+    (with-attributes (actions S)) 
     (coq.error "HB: using a const-decl without attribute alternative")).
 
 main _ :-

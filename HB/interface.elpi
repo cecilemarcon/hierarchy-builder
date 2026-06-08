@@ -3,8 +3,8 @@
 
 namespace interface {
 
-func declare argument ->.
-declare A :- private.declare-asset-renamed A private.asset-factory.
+func declare string, argument ->.
+declare Name A :- private.declare-asset-renamed Name A private.asset-factory.
 
 func declare-mixin argument ->.
 declare-mixin A :- private.declare-asset A private.asset-mixin.
@@ -248,11 +248,11 @@ declare-asset Arg AssetKind :- std.do! [
 
 % [declare-asset Asset AssetKind] unifies the code paths for
 % mixins, factories (and alias factories)
-func declare-asset-renamed argument, asset ->.
-declare-asset-renamed Arg AssetKind :- std.do! [
-  argument-name Arg ModuleOld,
-  Module = {calc (ModuleOld ^ "FACT")},
-  coq.say "Module = " Module,
+func declare-asset-renamed string, argument, asset ->.
+declare-asset-renamed Name Arg AssetKind :- std.do! [
+  % argument-name Arg Module,
+  coq.say "Module = " Name,
+  Module = Name,
   if-verbose (coq.say {header} "start module and section" Module),
   log.coq.env.begin-module Module none,
   log.coq.env.begin-section Module,
