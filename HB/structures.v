@@ -1235,6 +1235,7 @@ Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
+Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate lp:{{
 %Here
@@ -1256,14 +1257,14 @@ main [Arg] :-
     (% if "alternative" attribute, we declare a factory
      % TODO, generate proof requirements
      %check if a mixin of the same name has already been declared 
-      coq.say "parsed S" S, 
-      if (S = "")
+      if (S = "") %does not work yet
         (coq.error "give me a name for this factory")
         (true),
       argument-name Arg ArgNameS, 
-      coq.say ArgNameS,
-      if (from _ MixinName _, coq.gref->id MixinName Id, Id = ArgNameS)
-        (coq.error "HB: no declared interface with name " ArgNameS) 
+      coq.locate-all ArgNameS All,
+      std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
+      if (L = []) 
+        (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
         (coq.say "found an interface with this name already !",
         with-attributes (with-logging (interface.declare S Arg)))
     )

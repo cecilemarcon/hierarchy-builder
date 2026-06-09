@@ -49,7 +49,7 @@ HB.structure Definition ComGroupS := {T of ComGroup T &}.
 
 
 
-#[verbose,alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
+#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
