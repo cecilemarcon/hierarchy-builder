@@ -1253,32 +1253,30 @@ main [Arg] :-
   attributes A, 
   coq.say "attributes :" A,
   with-attributes (
+  % if "alternative" attribute, we declare a factory, else a mixin
   if (get-option "alternative" S) 
-    (% if "alternative" attribute, we declare a factory
-     % TODO, generate proof requirements
-     %check if a mixin of the same name has already been declared 
-      if (S = "") %does not work yet
+    (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
+      if (S = "") 
         (coq.error "give me a name for this factory")
         (true),
       argument-name Arg ArgNameS, 
+     % checks if a mixin of the same name has already been declared 
       coq.locate-all ArgNameS All,
       std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
         (coq.say "found an interface with this name already !",
-        with-attributes (with-logging (interface.declare S Arg)))
+        with-attributes (with-logging (interface.declare S Arg))
+        % TODO, generate proof requirements
+     )
     )
-    (% if no "alternative" attribute, we declare a mixin
+    (
       coq.say "\nno alternative attribute ! \n",
       with-attributes (with-logging (interface.declare-mixin Arg))
     )) .
 }}.
 
-(* Elpi Query lp:{{
-%  {{:gref isSemiGroup.axioms_}} = X,
-  {{:gref isB.axioms_}} = X,
-  from X Y Z.
-}}.  *)
+
 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -1303,7 +1301,7 @@ actions N :-
 main [indt-decl D] :- 
   with-attributes (
   if (get-option "alternative" S) 
-    (record-decl->id D _N, with-attributes (actions S)) %{calc (N ^ "FACT")}
+    (record-decl->id D _N, with-attributes (actions S)) 
     (record-decl->id D N, with-attributes (actions N))).
 
 main [const-decl _N _ _] :- 
