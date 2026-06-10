@@ -1294,18 +1294,10 @@ main [Arg] :-
       %%% then call for building the structure
       % with-attributes (with-logging (structure.declare Nstruct B Univ))
     )).
+main-interp-proof [const-decl _Name (some _BodySkel) _TyWPSkel] _ _Body _AllGoals (const-decl _Name (some _Body) _TyWP) :- !,
+ coq.error "not implemented yet".
+ 
 }}.
-
-(* "{  A  'of'  P  &  ..  &  Q  }" := *)
-  (* (sigT (fun A => (prod P .. (prod Q True) ..)%type)) *)
-
-
-(* main [const-decl N (some B) Arity] :- std.do! [
-  % compute the universe for the structure (default )
-  prod-last {coq.arity->term Arity} Ty,
-  if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
-  ,
-]. *)
 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -1348,9 +1340,42 @@ main _ :-
 
 
 Elpi Typecheck.
+#[proof(begin_if="alternative")]
 Elpi Export HB.interface. 
 
 
+
+
+#[arguments(raw)] Elpi Command HB.end_builders.
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/export.elpi".
+Elpi Accumulate File "HB/structure.elpi".
+Elpi Accumulate File "HB/interface.elpi".
+Elpi Accumulate lp:{{
+  main-interp-qed _ _ _P _GL (const-decl _Name (some _Body) _TyWP) :-
+    coq.error "not done yet".
+}}.
+
+#[synterp] Elpi Accumulate lp:{{
+
+shorten coq.env.{ begin-section, end-section }.
+
+main _ :- 
+  coq.error "nope not done yet sowwy".
+}}.
+
+#[proof="end"] 
+Elpi Export HB.end_builders.
 
 
 

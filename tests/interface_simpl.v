@@ -61,6 +61,8 @@ HB.structure Definition ComGroupS := {T of ComGroup T &}.
 }.
 
 
+
+
 HB.builders Context T of ComGroupFromSemiGroup T.
 (* assumption *)
 Lemma invl : forall x, exists xinv, op x xinv = e.
