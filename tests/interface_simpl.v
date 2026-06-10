@@ -3,13 +3,17 @@ From Stdlib Require Import ZArith.
 
 
 
-HB.mixin Record isB T := {
-    opB : T -> T -> T;
-    opAB : forall x y z, opB x (opB y z) = opB (opB x y) z
+HB.interface Record isTest T := {
+    test1 : T -> T -> T;
+    test2 : forall x y z, test1 x (test1 y z) = test1 (test1 x y) z
   }.
 
-HB.structure Definition B := {T of isB T}.
+Inspect 5.
+HB.structure Definition testS := {T of isTest T}. 
+Set Printing All. 
+Check testS nat.
 
+(* Check isTestSTRUCT. *)
 
 
 (* Interface should behave as a mixin *)
@@ -67,4 +71,4 @@ Lemma idl : forall x, op e x = x.
 HB.instance Definition _ := isGroup.Build T e idl idr invl invr.
 HB.instance Definition _ := ComGroup.Build T opC.
 
-HB.end.
+HB.end. 

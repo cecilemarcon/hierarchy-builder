@@ -665,6 +665,7 @@ main [const-decl N (some B) Arity] :- std.do! [
   % compute the universe for the structure (default )
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
+  coq.say "In Structure, N is" N "B is" B "Univ is " Univ,
   with-attributes (with-logging (structure.declare N B Univ)),
 ].
 
@@ -1235,7 +1236,7 @@ Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
-Elpi Accumulate File "HB/about.elpi".
+Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate lp:{{
 %Here
@@ -1248,12 +1249,14 @@ func argument-name argument -> string.
   argument-name (indt-decl (inductive Id _ _ _)) Id.
   argument-name (ctx-decl _) "_" :- !.
 
+pred get-parameter argument -> string. 
+  get-parameter (indt-decl (parameter T explicit _ c0 \
+   record _ (sort (typ _)) _ _)) T.
+
 :name "start"
 main [Arg] :- 
-  attributes A, 
-  coq.say "attributes :" A,
   with-attributes (
-  % if "alternative" attribute, we declare a factory, else a mixin
+  % if "alternative" attribute, we declare a factory, else a mixin and a structure
   if (get-option "alternative" S) 
     (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
       if (S = "") 
@@ -1266,17 +1269,43 @@ main [Arg] :-
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
         (coq.say "found an interface with this name already !",
-        with-attributes (with-logging (interface.declare S Arg))
+          with-attributes (with-logging (interface.declare S Arg))
         % TODO, generate proof requirements
      )
     )
     (
-      coq.say "\nno alternative attribute ! \n",
       with-attributes (with-logging (interface.declare-mixin Arg))
-    )) .
+      %%% generate the structure, first its name
+      % argument-name Arg N, 
+      % Nstruct = {calc (N ^ "STRUCT")},
+      % coq.say Nstruct,
+      %%% then its type
+      % sort Univ = {{Type}},
+      %%% then the {T of N T} structure (need to find the correct N)
+      % coq.say "Arg" Arg,
+      % coq.locate-all N All,
+      % coq.say "All" All,
+      % located->gref N All G,
+      % coq.say "G" G,
+      % std.assert! (from G _ _) "not a declared factory :(",
+      % argument->term Arg ArgT, coq.say "ArgT" ArgT,
+      % std.assert! (factory? Arg _) "This is not a factory yet",
+      % B = {{sigT (fun T => lp: T) }},
+      %%% then call for building the structure
+      % with-attributes (with-logging (structure.declare Nstruct B Univ))
+    )).
 }}.
 
+(* "{  A  'of'  P  &  ..  &  Q  }" := *)
+  (* (sigT (fun A => (prod P .. (prod Q True) ..)%type)) *)
 
+
+(* main [const-decl N (some B) Arity] :- std.do! [
+  % compute the universe for the structure (default )
+  prod-last {coq.arity->term Arity} Ty,
+  if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
+  ,
+]. *)
 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -1286,7 +1315,6 @@ shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-m
 
 pred actions i:id.
 actions N :-
-  coq.say "opening module " N,
   begin-module N none,
     begin-section N,
     end-section,
@@ -1302,7 +1330,9 @@ main [indt-decl D] :-
   with-attributes (
   if (get-option "alternative" S) 
     (record-decl->id D _N, with-attributes (actions S)) 
-    (record-decl->id D N, with-attributes (actions N))).
+    (record-decl->id D N, with-attributes (actions N), 
+    coq.say "D is" D)
+  ).
 
 main [const-decl _N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
