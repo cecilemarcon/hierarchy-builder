@@ -24,7 +24,8 @@ with-attributes P :-
     att "primitive" bool,
     att "non_forgetful_inheritance" bool,
     att "hnf" bool,
-    att "alternative" string,
+    att "alternative" bool,
+    att "name" string,
   ] Opts, !,
   Opts => (save-docstring, P).
 

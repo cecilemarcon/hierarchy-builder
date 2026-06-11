@@ -665,7 +665,7 @@ main [const-decl N (some B) Arity] :- std.do! [
   % compute the universe for the structure (default )
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
-  coq.say "In Structure, N is" N "B is" B "Univ is " Univ,
+  % coq.say "In Structure, N is" N "B is" B "Univ is " Univ,
   with-attributes (with-logging (structure.declare N B Univ)),
 ].
 
@@ -1254,25 +1254,11 @@ pred get-parameter argument -> string.
    record _ (sort (typ _)) _ _)) T.
 
 :name "start"
-main [Arg] :- 
+main [Arg] :- !,
   with-attributes (
   % if "alternative" attribute, we declare a factory, else a mixin and a structure
-  if (get-option "alternative" S) 
-    (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
-      if (S = "") 
-        (coq.error "give me a name for this factory")
-        (true),
-      argument-name Arg ArgNameS, 
-     % checks if a mixin of the same name has already been declared 
-      coq.locate-all ArgNameS All,
-      std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
-      if (L = []) 
-        (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
-        (coq.say "found an interface with this name already !",
-          with-attributes (with-logging (interface.declare S Arg))
-        % TODO, generate proof requirements
-     )
-    )
+  if (get-option "name" _; get-option "alternative" _)
+    (coq.error "you should not be here") 
     (
       with-attributes (with-logging (interface.declare-mixin Arg))
       %%% generate the structure, first its name
@@ -1294,9 +1280,29 @@ main [Arg] :-
       %%% then call for building the structure
       % with-attributes (with-logging (structure.declare Nstruct B Univ))
     )).
-main-interp-proof [const-decl _Name (some _BodySkel) _TyWPSkel] _ _Body _AllGoals (const-decl _Name (some _Body) _TyWP) :- !,
- coq.error "not implemented yet".
- 
+main-interp-proof [Arg] _ _Body _AllGoals (const-decl _Name (some _Body) _TyWP) :-  
+  with-attributes (
+    % if "alternative" attribute, we declare a factory, else a mixin and a structure
+    if (get-option "name" S) 
+      (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
+        if (S = "") 
+          (coq.error "give me a name for this factory")
+          (true),
+        argument-name Arg ArgNameS, 
+      % checks if a mixin of the same name has already been declared 
+        coq.locate-all ArgNameS All,
+        std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
+        if (L = []) 
+          (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
+          (coq.say "found an interface with this name already !",
+            with-attributes (with-logging (interface.declare S Arg))
+          % TODO, generate proof requirements
+      )
+      )
+      (
+        coq.error "Tmp: if you use alternative attribute, you have to use name= as well"
+      )
+  ).
 }}.
 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
@@ -1320,16 +1326,15 @@ actions N :-
 
 main [indt-decl D] :- 
   with-attributes (
-  if (get-option "alternative" S) 
+  if (get-option "name" S) 
     (record-decl->id D _N, with-attributes (actions S)) 
-    (record-decl->id D N, with-attributes (actions N), 
-    coq.say "D is" D)
+    (record-decl->id D N, with-attributes (actions N))
   ).
 
 main [const-decl _N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   with-attributes (
-  if (get-option "alternative" S) 
+  if (get-option "name" S) 
     (with-attributes (actions S)) 
     (coq.error "HB: using a const-decl without attribute alternative")).
 

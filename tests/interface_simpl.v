@@ -8,10 +8,10 @@ HB.interface Record isTest T := {
     test2 : forall x y z, test1 x (test1 y z) = test1 (test1 x y) z
   }.
 
-Inspect 5.
+(* Inspect 5. *)
 HB.structure Definition testS := {T of isTest T}. 
-Set Printing All. 
-Check testS nat.
+(* Set Printing All. 
+Check testS nat. *)
 
 (* Check isTestSTRUCT. *)
 
@@ -52,14 +52,14 @@ HB.interface Record ComGroup T of Group T := { (*of SemiGroup T*)
 HB.structure Definition ComGroupS := {T of ComGroup T &}. 
 
 
-
-#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
+(* Elpi Trace Browser. *)
+#[alternative, name="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
     invr : forall x, exists xinv, op xinv x = e;
 }.
-
+  Admitted.
 
 
 
