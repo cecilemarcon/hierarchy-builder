@@ -476,12 +476,11 @@ Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/factory.elpi".
+Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate lp:{{
-%here
 
 :name "start"
 main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
-
 }}.
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -661,11 +660,10 @@ Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate lp:{{
 
 :name "start"
-main [const-decl N (some B) Arity] :- std.do! [
+main [const-decl N (some B) Arity] :- coq.say "B" B, std.do! [
   % compute the universe for the structure (default )
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
-  % coq.say "In Structure, N is" N "B is" B "Univ is " Univ,
   with-attributes (with-logging (structure.declare N B Univ)),
 ].
 
@@ -919,6 +917,7 @@ Elpi Accumulate File "HB/factory.elpi".
 Elpi Accumulate File "HB/builders.elpi".
 Elpi Accumulate lp:{{
 
+%here
 :name "start"
 main [ctx-decl C] :- with-attributes (with-logging (builders.begin C)).
 
@@ -1237,6 +1236,8 @@ Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
 Elpi Accumulate File "HB/structure.elpi".
+Elpi Accumulate File "HB/builders.elpi".
+Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate lp:{{
 %Here
@@ -1250,66 +1251,105 @@ func argument-name argument -> string.
   argument-name (ctx-decl _) "_" :- !.
 
 pred get-parameter argument -> string. 
-  get-parameter (indt-decl (parameter T explicit _ c0 \
-   record _ (sort (typ _)) _ _)) T.
+  get-parameter (indt-decl (parameter T explicit _ _ \ _)) T.
+
+pred give-type list located.
+give-type [].
+give-type [loc-gref X|_Y] :- 
+  coq.say "wo" X, 
+  coq.env.typeof X TX, 
+  coq.say TX.
 
 :name "start"
-main [Arg] :- !,
+main [Arg] :- 
   with-attributes (
   % if "alternative" attribute, we declare a factory, else a mixin and a structure
-  if (get-option "name" _; get-option "alternative" _)
-    (coq.error "you should not be here") 
+  if (get-option "alternative" S) 
+    (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
+      if (S = "") 
+        (coq.error "give me a name for this factory")
+        (true),
+      argument-name Arg ArgNameS, 
+     % checks if a mixin of the same name has already been declared 
+      coq.locate-all ArgNameS All,
+      std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
+      if (L = []) 
+        (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
+        (coq.say "found an interface with this name already !",
+          with-attributes (with-logging (interface.declare S Arg))
+          % log in to the database 
+          % TODO, ask for builders
+          % get-parameter Arg Tparam,
+          % coq.say "param" Tparam "Artg" Arg,
+          % argument->gref (str S) GR,
+          % coq.say "S" S "GR" GR,  
+          % CtxtArg = {{sigT (fun T => (prod lp:{{(global GR)}} true)%type)}},
+          % coq.say "CtxtArg" CtxtArg, 
+          % coq.say "ArgNameS" ArgNameS,  
+          % % located->gref S {coq.locate-all S} _GR,
+          % C = 
+          % context-item Tparam explicit _ none (c0 \ 
+          %   context-item _ explicit (global GR) none (c1 \ context-end)),
+          % % external symbol context-item : id -> implicit_kind -> term -> option term -> (term -> context-decl) -> context-decl.
+          % % Context sigT (fun T => (prod ComGroup T)%type)
+          % coq.say "C is a context" C,
+          % with-attributes (with-logging (builders.begin C))
+        )
+    )
     (
-      with-attributes (with-logging (interface.declare-mixin Arg))
-      %%% generate the structure, first its name
-      % argument-name Arg N, 
-      % Nstruct = {calc (N ^ "STRUCT")},
-      % coq.say Nstruct,
-      %%% then its type
-      % sort Univ = {{Type}},
-      %%% then the {T of N T} structure (need to find the correct N)
+      with-attributes (with-logging (interface.declare-mixin Arg)),
+      %% generate the structure, first its name
+      argument-name Arg N, 
+      Nstruct = {calc (N ^ "STRUCT")},
+      coq.say Nstruct,
+      %% then its type
+      sort Univ = {{Type}},
+      coq.say N,
+      with-attributes (with-logging (about.main N)),
+      %% then the {T of N T} structure (need to find the correct N)
+      % coq.locate N GR, 
+      % coq.say GR
       % coq.say "Arg" Arg,
-      % coq.locate-all N All,
+      coq.locate-all N All,
+      coq.say "All:" All,
+      All = [loc-abbreviation GR|_],
+      coq.notation.abbreviation-body GR NArgs Bods,
+      coq.say "NArgs:" NArgs "Bods" Bods,
+      coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+      coq.safe-dest-app Trrr (global GRr) _, !,
+      coq.say "Trrr" Trrr "\n GRr" GRr,
+
+      % % phant-abbrev Cst _CstAbbrev GRr,
+      % % coq.env.typeof GR Ty,
+      % GRr = const C,
+      % coq.say "C" C,
+      % coq.env.const C (some Bo) _TyC,
+      % coq.say "Bo:" Bo,
       % coq.say "All" All,
-      % located->gref N All G,
+      % located->gref N All GR,
+      % located->gref N AllG,
       % coq.say "G" G,
       % std.assert! (from G _ _) "not a declared factory :(",
       % argument->term Arg ArgT, coq.say "ArgT" ArgT,
       % std.assert! (factory? Arg _) "This is not a factory yet",
-      % B = {{sigT (fun T => lp: T) }},
-      %%% then call for building the structure
-      % with-attributes (with-logging (structure.declare Nstruct B Univ))
+      coq.locate "sigT" (indt SigT),
+      coq.locate "prod" (indt Prod),
+      coq.locate "True" (indt TTrue),
+      B = app [global (indt SigT), _, 
+        fun `T` _ c0 \  app
+          [global (indt Prod), app [global GRr, c0], global (indt TTrue)]],
+      coq.say B,
+      %% then call for building the structure
+      with-attributes (with-logging (structure.declare Nstruct B Univ))
     )).
-main-interp-proof [Arg] _ _Body _AllGoals (const-decl _Name (some _Body) _TyWP) :-  
-  with-attributes (
-    % if "alternative" attribute, we declare a factory, else a mixin and a structure
-    if (get-option "name" S) 
-      (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
-        if (S = "") 
-          (coq.error "give me a name for this factory")
-          (true),
-        argument-name Arg ArgNameS, 
-      % checks if a mixin of the same name has already been declared 
-        coq.locate-all ArgNameS All,
-        std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
-        if (L = []) 
-          (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
-          (coq.say "found an interface with this name already !",
-            with-attributes (with-logging (interface.declare S Arg))
-          % TODO, generate proof requirements
-      )
-      )
-      (
-        coq.error "Tmp: if you use alternative attribute, you have to use name= as well"
-      )
-  ).
 }}.
+
 
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
 #[synterp] Elpi Accumulate lp:{{
 
-shorten coq.env.{ begin-module, end-module, begin-section, end-section, export-module }.
+shorten coq.env.{ begin-module, end-module, begin-section, end-section, import-module, export-module }.
 
 pred actions i:id.
 actions N :-
@@ -1323,19 +1363,65 @@ actions N :-
   coq.env.current-library File,
   coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
 
+pred actions-builders i:id.
+actions-builders N :-
+  begin-module N none,
+    begin-module "Super" none,
+    end-module _,
+    begin-section N.
 
-main [indt-decl D] :- 
+pred actions-struct i:id.
+actions-struct N :-
+  begin-module N none,
+    begin-module "Exports" none,
+    end-module E,
+    import-module E,
+  end-module _,
+  export-module E,
+  begin-module {calc (N ^ "ElpiOperations")} none,
+  end-module O,
+  export-module O,
+  coq.env.current-library File,
+  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)),
+  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)),
+  if (get-option "mathcomp" tt ; get-option "mathcomp.axiom" _) (actions-compat N) true.
+
+pred actions-compat i:id.
+actions-compat ModuleName :-
+  CompatModuleName is "MathCompCompat" ^ ModuleName,
+  begin-module CompatModuleName none,
+    begin-module ModuleName none,
+    end-module _,
+  end-module O,
+  export-module O,
+  % is this a bug?
+  % coq.env.current-library File,
+  % coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)).
+  true.
+
+
+main [indt-decl D] :- !,
   with-attributes (
-  if (get-option "name" S) 
-    (record-decl->id D _N, with-attributes (actions S)) 
-    (record-decl->id D N, with-attributes (actions N))
+  if (get-option "alternative" S) 
+    (
+      record-decl->id D _N, with-attributes (actions S) 
+      % coq.say "Here at least",
+      % NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
+      % coq.say "itnemedaire",
+      % actions-builders NewId,
+      % coq.say "finished"
+    ) 
+    (record-decl->id D N, with-attributes (actions N),
+    with-attributes (actions-struct {calc (N ^ "STRUCT")}))
   ).
 
 main [const-decl _N _ _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   with-attributes (
-  if (get-option "name" S) 
-    (with-attributes (actions S)) 
+  if (get-option "alternative" S) 
+    (with-attributes (actions S) 
+    % actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
+    ) 
     (coq.error "HB: using a const-decl without attribute alternative")).
 
 main _ :-
@@ -1345,42 +1431,9 @@ main _ :-
 
 
 Elpi Typecheck.
-#[proof(begin_if="alternative")]
 Elpi Export HB.interface. 
 
 
-
-
-#[arguments(raw)] Elpi Command HB.end_builders.
-Elpi Accumulate Db hb.db.
-Elpi Accumulate File "HB/common/stdpp.elpi".
-Elpi Accumulate File "HB/common/database.elpi".
-Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
-Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
-Elpi Accumulate File "HB/common/utils.elpi".
-Elpi Accumulate File "HB/common/log.elpi".
-Elpi Accumulate File "HB/common/synthesis.elpi".
-Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
-Elpi Accumulate File "HB/instance.elpi".
-Elpi Accumulate File "HB/context.elpi".
-Elpi Accumulate File "HB/export.elpi".
-Elpi Accumulate File "HB/structure.elpi".
-Elpi Accumulate File "HB/interface.elpi".
-Elpi Accumulate lp:{{
-  main-interp-qed _ _ _P _GL (const-decl _Name (some _Body) _TyWP) :-
-    coq.error "not done yet".
-}}.
-
-#[synterp] Elpi Accumulate lp:{{
-
-shorten coq.env.{ begin-section, end-section }.
-
-main _ :- 
-  coq.error "nope not done yet sowwy".
-}}.
-
-#[proof="end"] 
-Elpi Export HB.end_builders.
 
 
 

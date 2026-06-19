@@ -250,7 +250,6 @@ declare-asset Arg AssetKind :- std.do! [
 func declare-asset-renamed string, argument, asset ->.
 declare-asset-renamed Name Arg AssetKind :- std.do! [
   % argument-name Arg Module,
-  coq.say "Module = " Name,
   Module = Name,
   if-verbose (coq.say {header} "start module and section" Module),
   log.coq.env.begin-module Module none,

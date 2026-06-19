@@ -8,54 +8,65 @@ main S :-
   coq.locate-all S All,
   std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
   if (L = []) (coq.error "HB: unable to locate" S) true,
+  coq.say "L" L "S" S,
   std.forall L (about.main-located S).
 
 func main-located string, located ->.
-main-located S (loc-gref GR) :- class-def (class Class GR MLwP), !,
+main-located S (loc-gref GR) :- %coq.say "tried 1", 
+  class-def (class Class GR MLwP), !,
   private.main-structure S Class GR MLwP.
 
-main-located _ (loc-gref Class) :- class-def (class Class GR MLwP), !,
+main-located _ (loc-gref Class) :- %coq.say "tried 2", 
+  class-def (class Class GR MLwP), !,
   gref->modname_short GR "." M,
   coq.gref->id GR St,
   S is M ^ "." ^ St,
   private.main-structure S Class GR MLwP.
 
-main-located S (loc-gref (indt I)) :- factory->constructor (indt I) _, !,
+main-located S (loc-gref (indt I)) :- %coq.say "tried 3", 
+  factory->constructor (indt I) _, !,
   private.main-factory S I.
 
-main-located S (loc-gref (const C)) :- factory->constructor (const C) _, !,
+main-located S (loc-gref (const C)) :- %coq.say "tried 4", 
+  factory->constructor (const C) _, !,
   private.main-factory-alias S C.
 
-main-located S (loc-gref (const C)) :- exported-op M _ C, !,
+main-located S (loc-gref (const C)) :- %coq.say "tried 5", 
+  exported-op M _ C, !,
   private.main-operation S M C.
 
-main-located S (loc-gref GR) :- factory-alias->gref GR F ok, not (F = GR), !,
+main-located S (loc-gref GR) :- %coq.say "tried 6", 
+  factory-alias->gref GR F ok, not (F = GR), !,
   main-located S (loc-gref F).
 
-main-located S (loc-abbreviation A) :- phant-abbrev GR PhB A, is-factory (indt F), factory->constructor (indt F) GR, !,
+main-located S (loc-abbreviation A) :- %coq.say "tried 7", 
+  phant-abbrev GR PhB A, is-factory (indt F), 
+  factory->constructor (indt F) GR, !,
   private.main-factory->constructor S F PhB GR.
 
-main-located S (loc-abbreviation A) :-
+main-located S (loc-abbreviation A) :- %coq.say "tried 8",
   coq.notation.abbreviation-body A NArgs _,
   coq.notation.abbreviation A {coq.mk-n-holes NArgs} T,
   coq.safe-dest-app T (global GR) _, !,
   main-located S (loc-gref GR).
 
-main-located S (loc-gref GR) :- from Factory Mixin GR, !,
+main-located S (loc-gref GR) :- %coq.say "tried 9", 
+  from Factory Mixin GR, !,
   private.main-builder S Factory Mixin.
 
-main-located S (loc-gref GR) :-
+main-located S (loc-gref GR) :- %coq.say "tried 10",
   std.filter {coq.CS.db-for _ (cs-gref GR)} (not1 unif-hint?) LV,
   coq.CS.db-for GR _ LP,
   std.filter {coq.coercion.db} (c\c = coercion GR _ _ _) LC,
   if (LV = [], LP = [], LC = [])
-     (coq.error "HB: uninteresting constant" {coq.pp->string {private.pp-loc-of GR}})
+     (XX = {coq.pp->string {private.pp-loc-of GR}}, coq.say "XX" XX, coq.say "HB: uninteresting constant" GR XX )
      true,
   if (not (LV = [])) (private.main-canonical-value S LV) true,
   if (not (LP = [])) (private.main-canonical-projection S GR LP) true,
   if (not (LC = [])) (private.main-coercion S LC) true.
 
-main-located S (loc-abbreviation _) :- coq.error "HB: unknown abbreviation" S.
+main-located S (loc-abbreviation _) :- %coq.say "tried 11", 
+  coq.error "HB: unknown abbreviation" S.
 
 /* things also used in paths.elpi ------------------------------------------ */
 

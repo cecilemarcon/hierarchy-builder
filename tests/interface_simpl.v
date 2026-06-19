@@ -3,7 +3,7 @@ From Stdlib Require Import ZArith.
 
 
 
-HB.interface Record isTest T := {
+HB.mixin Record isTest T := {
     test1 : T -> T -> T;
     test2 : forall x y z, test1 x (test1 y z) = test1 (test1 x y) z
   }.
@@ -52,16 +52,16 @@ HB.interface Record ComGroup T of Group T := { (*of SemiGroup T*)
 HB.structure Definition ComGroupS := {T of ComGroup T &}. 
 
 
-(* Elpi Trace Browser. *)
-#[alternative, name="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
+#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
     invr : forall x, exists xinv, op xinv x = e;
 }.
-  Admitted.
 
 
+
+(* Elpi Trace Browser. *)
 
 HB.builders Context T of ComGroupFromSemiGroup T.
 (* assumption *)

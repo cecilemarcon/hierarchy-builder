@@ -8,6 +8,7 @@ namespace structure {
 pred declare i:string, i:term, i:sort.
 declare Module BSkel Sort :- std.do! [
   disable-id-phant BSkel BSkelNoId,
+  coq.say "BSkel "BSkel " BSkelNoId" BSkelNoId,
   std.assert-ok! (coq.elaborate-skeleton BSkelNoId _ BNoId) "illtyped structure definition",
   re-enable-id-phant BNoId B,
   private.sigT->list-w-params B GRFSwP ClosureCheck,

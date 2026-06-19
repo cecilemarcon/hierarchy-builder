@@ -46,7 +46,7 @@ located->gref S [] _ :- coq.error "Could not locate name" S.
 
 % TODO: generalize/rename when we support parameters
 func argument->gref argument -> gref.
-argument->gref (str S) GR :- !, located->gref S {coq.locate-all S} GR.
+argument->gref (str S) GR :- !, L = {coq.locate-all S}, coq.say "L" L, located->gref S L GR.
 argument->gref X _ :- coq.error "Argument" X "is expected to be a string".
 
 func argument->term argument -> term.
