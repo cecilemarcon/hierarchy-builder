@@ -1235,10 +1235,11 @@ Elpi Accumulate File "HB/common/phant-abbreviation.elpi".
 Elpi Accumulate File "HB/instance.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/export.elpi".
-Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate File "HB/builders.elpi".
 Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate File "HB/interface.elpi".
+Elpi Accumulate File "HB/factory.elpi".
+Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate lp:{{
 %Here
 % TODO : figure out why I don't have access to this function which exists in factory.elpi
@@ -1297,50 +1298,31 @@ main [Arg] :-
         )
     )
     (
-      with-attributes (with-logging (interface.declare-mixin Arg)),
+      with-attributes (with-logging (interface.declare-mixin Arg Rules)),
+      coq.say "now interface",
+      Rules => (
       %% generate the structure, first its name
       argument-name Arg N, 
       Nstruct = {calc (N ^ "STRUCT")},
-      coq.say Nstruct,
       %% then its type
       sort Univ = {{Type}},
-      coq.say N,
-      with-attributes (with-logging (about.main N)),
+      % with-attributes (with-logging (about.main N)),
       %% then the {T of N T} structure (need to find the correct N)
-      % coq.locate N GR, 
-      % coq.say GR
-      % coq.say "Arg" Arg,
       coq.locate-all N All,
-      coq.say "All:" All,
       All = [loc-abbreviation GR|_],
-      coq.notation.abbreviation-body GR NArgs Bods,
-      coq.say "NArgs:" NArgs "Bods" Bods,
+      coq.notation.abbreviation-body GR NArgs _Bods,
       coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
       coq.safe-dest-app Trrr (global GRr) _, !,
-      coq.say "Trrr" Trrr "\n GRr" GRr,
-
-      % % phant-abbrev Cst _CstAbbrev GRr,
-      % % coq.env.typeof GR Ty,
-      % GRr = const C,
-      % coq.say "C" C,
-      % coq.env.const C (some Bo) _TyC,
-      % coq.say "Bo:" Bo,
-      % coq.say "All" All,
-      % located->gref N All GR,
-      % located->gref N AllG,
-      % coq.say "G" G,
-      % std.assert! (from G _ _) "not a declared factory :(",
-      % argument->term Arg ArgT, coq.say "ArgT" ArgT,
-      % std.assert! (factory? Arg _) "This is not a factory yet",
       coq.locate "sigT" (indt SigT),
       coq.locate "prod" (indt Prod),
       coq.locate "True" (indt TTrue),
       B = app [global (indt SigT), _, 
         fun `T` _ c0 \  app
-          [global (indt Prod), app [global GRr, c0], global (indt TTrue)]],
-      coq.say B,
+          [global (indt Prod), app [global GRr, c0], global (indt TTrue)]]),
+      % coq.say B,
       %% then call for building the structure
-      with-attributes (with-logging (structure.declare Nstruct B Univ))
+      Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
+      % acc-clauses current Rules
     )).
 }}.
 

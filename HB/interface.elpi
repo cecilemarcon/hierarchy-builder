@@ -6,8 +6,8 @@ namespace interface {
 func declare string, argument ->.
 declare Name A :- private.declare-asset-renamed Name A private.asset-factory.
 
-func declare-mixin argument ->.
-declare-mixin A :- private.declare-asset A private.asset-mixin.
+func declare-mixin argument -> list prop.
+declare-mixin A Clauses :- private.declare-asset A private.asset-mixin Clauses.
 
 kind factory-abbrev type.
 type by-classname gref -> factory-abbrev.
@@ -216,8 +216,8 @@ mk-factory-abbrev Str GR Aliases FactAbbrev :-
 
 % [declare-asset Asset AssetKind] unifies the code paths for
 % mixins, factories (and alias factories)
-func declare-asset argument, asset ->.
-declare-asset Arg AssetKind :- std.do! [
+func declare-asset argument, asset -> list prop.
+declare-asset Arg AssetKind Clauses:- std.do! [
   argument-name Arg Module,
   if-verbose (coq.say {header} "start module and section" Module),
   log.coq.env.begin-module Module none,
@@ -236,7 +236,7 @@ declare-asset Arg AssetKind :- std.do! [
     apply-w-params ArgwP Params TheKey (indt-decl (record _ Sort _ Fields)),
     if-verbose (coq.say {header} "declare mixin or factory"),
     declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
-      Params TheKey Sort Fields MLwP Module AssetKind
+      Params TheKey Sort Fields MLwP Module AssetKind Clauses
   ) (
     apply-w-params ArgwP Params TheKey (const-decl _ (some Sort) _),
     if-verbose (coq.say {header} "declare factory alias"),
@@ -268,7 +268,7 @@ declare-asset-renamed Name Arg AssetKind :- std.do! [
     apply-w-params ArgwP Params TheKey (indt-decl (record _ Sort _ Fields)),
     if-verbose (coq.say {header} "declare mixin or factory"),
     declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
-      Params TheKey Sort Fields MLwP Module AssetKind
+      Params TheKey Sort Fields MLwP Module AssetKind _
   ) (
     apply-w-params ArgwP Params TheKey (const-decl _ (some Sort) _),
     if-verbose (coq.say {header} "declare factory alias"),
@@ -279,9 +279,9 @@ declare-asset-renamed Name Arg AssetKind :- std.do! [
 
 
 pred declare-mixin-or-factory i:list prop, i:list constant, i:list term, i:term,
-  i:term, i:record-decl, i:list-w-params factoryname, i:id, i:asset.
+  i:term, i:record-decl, i:list-w-params factoryname, i:id, i:asset, o:list prop.
 declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
-    TheParams TheType Sort1 Fields GRFSwP Module D :- std.do! [
+    TheParams TheType Sort1 Fields GRFSwP Module D NewClauses :- std.do! [
 
   if-verbose (coq.say {header} "declare record axioms_"),
   Kname = "Axioms_",

@@ -15,17 +15,17 @@ Check testS nat. *)
 
 (* Check isTestSTRUCT. *)
 
-
+(* Elpi Trace Browser. *)
 (* Interface should behave as a mixin *)
 HB.interface Record SemiGroup T := {
     op : T -> T -> T;
     opA : forall x y z, op x (op y z) = op (op x y) z
   }.
 
-HB.structure Definition SemiGroupS := {T of SemiGroup T}.
+(* HB.structure Definition SemiGroupS := {T of SemiGroup T}. *)
 HB.instance  Definition _ := SemiGroup.Build Z Z.add Z.add_assoc.
 
-Lemma lestfassoc (T : SemiGroupS.type) (x y z : T) : op (op x y) z = op x (op y z).
+Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
 
 
