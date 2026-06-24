@@ -9,7 +9,7 @@ HB.mixin Record isTest T := {
   }.
 
 (* Inspect 5. *)
-HB.structure Definition testS := {T of isTest T}. 
+HB.structure Definition testS := {T of isTest T &}. 
 (* Set Printing All. 
 Check testS nat. *)
 
@@ -29,8 +29,22 @@ Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (
   Proof. symmetry. apply opA. Qed.
 
 
+
+
+
 (* Building a mixin dependent on a previous one *)
-HB.interface Record isGroup T of SemiGroup T := { 
+HB.mixin Record isT T of isTest T := { 
+    a1 : T;
+    a2 : forall x, test1 a1 x = x;
+    a5 : forall x, exists xinv, test1 xinv x = a1;
+}.
+
+(* HB.structure Definition TS := {T of isT T & }.  *)
+HB.structure Definition TS' := sigT (fun T => (prod (isT T) False)%type).
+
+
+
+HB.interface Record Group T of SemiGroup T := { 
     e : T;
     idl : forall x, op e x = x;
     idr : forall x, op x e = x;
@@ -38,9 +52,10 @@ HB.interface Record isGroup T of SemiGroup T := {
     invr : forall x, exists xinv, op xinv x = e;
 }.
 
-
+HB.about Group.
+HB.about isT.
 (* Structure requires the two mixins *)
-HB.structure Definition Group := {T of SemiGroup T & isGroup T}.
+(* HB.structure Definition Group := {T of SemiGroup T & isGroup T}. *)
 
 
 
@@ -49,7 +64,7 @@ HB.interface Record ComGroup T of Group T := { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
 }.
 
-HB.structure Definition ComGroupS := {T of ComGroup T &}. 
+(* HB.structure Definition ComGroupS := {T of ComGroup T &}.  *)
 
 
 #[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)

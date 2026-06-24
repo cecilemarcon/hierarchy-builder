@@ -176,16 +176,12 @@ declare Module BSkel Sort :- std.do! [
   export.module ElpiOperationModName ElpiOperations,
 
   if-verbose (coq.say {header} "abbreviation factory-by-classname"),
-  coq.say "here0",
 
   ClassAlias => NewClauses => factory.declare-abbrev Module (factory.by-classname ClassName) ClassAbbrev,
-  coq.say "here1",
   export.clause (phant-abbrev ClassName ClassName ClassAbbrev),
 
-  coq.say "here2",
   NewClauses => if-MC-compat (private.mc-compat-structure Module ModulePath MLToExport
     {w-params.nparams MLwP} ClassProjection GRPack),
-  coq.say "here3",
 
 % Automatic saturation disabled since it is expensive
 %  NewClauses => instance.saturate-instances,

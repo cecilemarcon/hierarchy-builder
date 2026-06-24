@@ -660,11 +660,12 @@ Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate lp:{{
 
 :name "start"
-main [const-decl N (some B) Arity] :- coq.say "B" B, std.do! [
+main [const-decl N (some B) Arity] :- std.do! [
   % compute the universe for the structure (default )
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
   with-attributes (with-logging (structure.declare N B Univ)),
+  coq.say "N" N "B" B "Univ" Univ,
 ].
 
 }}.
@@ -1261,6 +1262,9 @@ give-type [loc-gref X|_Y] :-
   coq.env.typeof X TX, 
   coq.say TX.
 
+func replace-head list term, term -> list term.
+  replace-head [_|Rest] C0 [C0|Rest].
+
 :name "start"
 main [Arg] :- 
   with-attributes (
@@ -1299,27 +1303,27 @@ main [Arg] :-
     )
     (
       with-attributes (with-logging (interface.declare-mixin Arg Rules)),
-      coq.say "now interface",
       Rules => (
       %% generate the structure, first its name
       argument-name Arg N, 
       Nstruct = {calc (N ^ "STRUCT")},
       %% then its type
       sort Univ = {{Type}},
-      % with-attributes (with-logging (about.main N)),
-      %% then the {T of N T} structure (need to find the correct N)
+      % with-attributes (with-logging (about.main N)), 
+      %% then the {T of N T &} structure
       coq.locate-all N All,
       All = [loc-abbreviation GR|_],
       coq.notation.abbreviation-body GR NArgs _Bods,
       coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
-      coq.safe-dest-app Trrr (global GRr) _, !,
-      coq.locate "sigT" (indt SigT),
-      coq.locate "prod" (indt Prod),
-      coq.locate "True" (indt TTrue),
+      coq.safe-dest-app Trrr Hd Argz, !, 
+      coq.say "Trrr" Trrr "Argz" Argz, 
+      coq.locate "sigT" (indt SigT), 
+      coq.locate "prod" (indt Prod), 
+      coq.locate "False" (indt FFalse), 
       B = app [global (indt SigT), _, 
         fun `T` _ c0 \  app
-          [global (indt Prod), app [global GRr, c0], global (indt TTrue)]]),
-      % coq.say B,
+          [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
+      coq.say "in interface : Nstruct" Nstruct "B" B "Univ" Univ,
       %% then call for building the structure
       Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
       % acc-clauses current Rules
