@@ -8,14 +8,9 @@ HB.mixin Record isTest T := {
     test2 : forall x y z, test1 x (test1 y z) = test1 (test1 x y) z
   }.
 
-(* Inspect 5. *)
 HB.structure Definition testS := {T of isTest T &}. 
-(* Set Printing All. 
-Check testS nat. *)
 
-(* Check isTestSTRUCT. *)
 
-(* Elpi Trace Browser. *)
 (* Interface should behave as a mixin *)
 HB.interface Record SemiGroup T := {
     op : T -> T -> T;
@@ -52,15 +47,10 @@ HB.interface Record Group T of SemiGroup T := {
     invr : forall x, exists xinv, op xinv x = e;
 }.
 
-HB.about Group.
-HB.about isT.
-(* Structure requires the two mixins *)
-(* HB.structure Definition Group := {T of SemiGroup T & isGroup T}. *)
+Print GroupSTRUCT.
+Print Group.
 
-
-
-(* Building a mixin dependent on a previous one *)
-HB.interface Record ComGroup T of Group T := { (*of SemiGroup T*)
+HB.interface Record ComGroup T of GroupSTRUCT T := { 
     opC : forall x y:T, op x y = op y x;
 }.
 
@@ -85,7 +75,7 @@ Lemma invl : forall x, exists xinv, op x xinv = e.
 Lemma idl : forall x, op e x = x. 
     intros. rewrite opC. apply idr. Qed. 
 
-HB.instance Definition _ := isGroup.Build T e idl idr invl invr.
+HB.instance Definition _ := Group.Build T e idl idr invl invr.
 HB.instance Definition _ := ComGroup.Build T opC.
 
 HB.end. 
