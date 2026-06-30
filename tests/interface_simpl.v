@@ -12,13 +12,17 @@ HB.structure Definition testS := {T of isTest T &}.
 
 
 (* Interface should behave as a mixin *)
-HB.interface Record SemiGroup T := {
+HB.interface Record Magma T := {
     op : T -> T -> T;
-    opA : forall x y z, op x (op y z) = op (op x y) z
-  }.
+}. 
 
-(* HB.structure Definition SemiGroupS := {T of SemiGroup T}. *)
-HB.instance  Definition _ := SemiGroup.Build Z Z.add Z.add_assoc.
+HB.interface Record SemiGroup T of Magma T := {
+  opA : forall x y z:T, op x (op y z) = op (op x y) z
+}.
+
+(* TODO when changing instance : in one line *)
+HB.instance  Definition _ := Magma.Build Z Z.add.
+HB.instance  Definition _ := SemiGroup.Build Z Z.add_assoc.
 
 Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
@@ -39,7 +43,7 @@ HB.structure Definition TS' := sigT (fun T => (prod (isT T) False)%type).
 
 
 
-HB.interface Record Group T of SemiGroup T := { 
+HB.interface Record Group T of SemiGroupSTRUCT T := { 
     e : T;
     idl : forall x, op e x = x;
     idr : forall x, op x e = x;
@@ -57,16 +61,12 @@ HB.interface Record ComGroup T of GroupSTRUCT T := {
 (* HB.structure Definition ComGroupS := {T of ComGroup T &}.  *)
 
 
-#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroup T:= { (*of SemiGroup T*)
+#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroupSTRUCT T:= { (*of SemiGroup T*)
     opC : forall x y:T, op x y = op y x;
     e : T;
     idr : forall x, op x e = x;
     invr : forall x, exists xinv, op xinv x = e;
 }.
-
-
-
-(* Elpi Trace Browser. *)
 
 HB.builders Context T of ComGroupFromSemiGroup T.
 (* assumption *)
@@ -79,3 +79,18 @@ HB.instance Definition _ := Group.Build T e idl idr invl invr.
 HB.instance Definition _ := ComGroup.Build T opC.
 
 HB.end. 
+
+
+HB.interface Record ComMonoid T of Magma T := {
+  opC' : forall x y:T, op x y = op y x
+}.
+
+#[alternative="ComGroupFromGroupAndComMonoid"] HB.interface Record ComGroup T of 
+  GroupSTRUCT T & ComMonoid T := { (*of SemiGroup T*)
+}.
+HB.builders Context T of ComGroupFromGroupAndComMonoid T.
+Check opC.
+Check op.
+HB.instance Definition _ := ComGroup.Build T opC'.
+HB.end.
+
