@@ -3,10 +3,17 @@
 
 namespace interface {
 
-func declare string, argument ->.
-declare Name A :- private.declare-asset-renamed Name A private.asset-factory.
+func declare string, argument -> list prop.
+declare Name A Clauses :- private.declare-asset-renamed Name A private.asset-factory Clauses.
 
-func declare-mixin argument -> list prop.
+% func declare-one-or-two-mixins argument -> list prop. 
+% declare-one-or-two-mixins A Clauses :- coq.say "HERE", 
+%   % coq.typecheck A _ D,
+%   % if (D = ok)
+%     declare-mixin A Clauses.
+%     % (coq.error "need to parse the &").
+
+func declare-mixin argument -> list prop. 
 declare-mixin A Clauses :- private.declare-asset A private.asset-mixin Clauses.
 
 kind factory-abbrev type.
@@ -164,7 +171,7 @@ key-decl-w-mixins DeclKind ID TySkel Rest Conv Out :- std.do! [
 func param-decl-w-mixins string, string, term, (term -> A),
   (func A -> pair mixins (w-params A)) -> pair mixins (w-params A).
 param-decl-w-mixins DeclKind ID TySkel Rest Conv Out :-
-  if-verbose (coq.say {header} "processing param" DeclKind),
+  if-verbose (coq.say {header} "processing   param" DeclKind),
   std.assert-ok! (coq.elaborate-ty-skeleton TySkel _ Ty) "param illtyped",
   coq.string->name ID N, @pi-decl N Ty p\ Conv (Rest p) (pr (MLwP p) (R p)),
   if (var Ty) (fresh-type Ty) true,
@@ -226,6 +233,7 @@ declare-asset Arg AssetKind Clauses:- std.do! [
   if-verbose (coq.say {header} "converting arguments" Arg "to factories"),
   argument->w-mixins Arg (pr FLwP ArgwP),
 
+  % the of A T is in FLwP
   if-verbose (coq.say {header} "converting factories" FLwP "to mixins"),
   %%% factories-provide FLwP MLwP,
 
@@ -247,8 +255,8 @@ declare-asset Arg AssetKind Clauses:- std.do! [
 
 % [declare-asset Asset AssetKind] unifies the code paths for
 % mixins, factories (and alias factories)
-func declare-asset-renamed string, argument, asset ->.
-declare-asset-renamed Name Arg AssetKind :- std.do! [
+func declare-asset-renamed string, argument, asset -> list prop.
+declare-asset-renamed Name Arg AssetKind Clauses :- std.do! [
   % argument-name Arg Module,
   Module = Name,
   if-verbose (coq.say {header} "start module and section" Module),
@@ -268,7 +276,7 @@ declare-asset-renamed Name Arg AssetKind :- std.do! [
     apply-w-params ArgwP Params TheKey (indt-decl (record _ Sort _ Fields)),
     if-verbose (coq.say {header} "declare mixin or factory"),
     declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
-      Params TheKey Sort Fields MLwP Module AssetKind _
+      Params TheKey Sort Fields MLwP Module AssetKind Clauses
   ) (
     apply-w-params ArgwP Params TheKey (const-decl _ (some Sort) _),
     if-verbose (coq.say {header} "declare factory alias"),

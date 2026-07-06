@@ -920,7 +920,7 @@ Elpi Accumulate lp:{{
 
 %here
 :name "start"
-main [ctx-decl C] :- with-attributes (with-logging (builders.begin C)).
+main [ctx-decl C] :- coq.say "Context :" C, with-attributes (with-logging (builders.begin C)).
 
 }}.
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
@@ -1252,7 +1252,7 @@ func argument-name argument -> string.
   argument-name (indt-decl (inductive Id _ _ _)) Id.
   argument-name (ctx-decl _) "_" :- !.
 
-pred get-parameter argument -> string. 
+pred get-parameter argument -> id. 
   get-parameter (indt-decl (parameter T explicit _ _ \ _)) T.
 
 pred give-type list located.
@@ -1262,7 +1262,7 @@ give-type [loc-gref X|_Y] :-
   coq.env.typeof X TX, 
   coq.say TX.
 
-func replace-head list term, term -> list term.
+pred replace-head list term, term -> list term.
   replace-head [_|Rest] C0 [C0|Rest].
 
 :name "start"
@@ -1274,61 +1274,57 @@ main [Arg] :-
       if (S = "") 
         (coq.error "give me a name for this factory")
         (true),
-      argument-name Arg ArgNameS, 
+      argument-name Arg N, 
      % checks if a mixin of the same name has already been declared 
-      coq.locate-all ArgNameS All,
+      coq.locate-all N All,
       std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
-        (coq.say "found an interface with this name already !",
-          with-attributes (with-logging (interface.declare S Arg))
-          % log in to the database 
-          % TODO, ask for builders
-          % get-parameter Arg Tparam,
-          % coq.say "param" Tparam "Artg" Arg,
-          % argument->gref (str S) GR,
-          % coq.say "S" S "GR" GR,  
-          % CtxtArg = {{sigT (fun T => (prod lp:{{(global GR)}} true)%type)}},
-          % coq.say "CtxtArg" CtxtArg, 
-          % coq.say "ArgNameS" ArgNameS,  
-          % % located->gref S {coq.locate-all S} _GR,
-          % C = 
-          % context-item Tparam explicit _ none (c0 \ 
-          %   context-item _ explicit (global GR) none (c1 \ context-end)),
-          % % external symbol context-item : id -> implicit_kind -> term -> option term -> (term -> context-decl) -> context-decl.
-          % % Context sigT (fun T => (prod ComGroup T)%type)
-          % coq.say "C is a context" C,
-          % with-attributes (with-logging (builders.begin C))
+        ( coq.say "found an interface with this name already !",
+          with-attributes (with-logging (interface.declare S Arg Rules)),
+          Rules => (
+            coq.say "S" S,
+            coq.locate-all S AllS,
+            AllS = [loc-abbreviation GR|_],
+            coq.notation.abbreviation-body GR NArgs _Bods,
+            coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+            coq.safe-dest-app Trrr Hd Argz, !, 
+            coq.say GR NArgs "\nTrrr" Trrr "\nHd" Hd "\nArgz" Argz,
+            get-parameter Arg Tparam,
+            coq.say "ARGZ =" Argz,
+            std.length Argz Nl,
+            coq.say Nl,
+            C =
+              context-item Tparam explicit _ none (c0 \ 
+                  context-item {coq.name->id `_`} explicit 
+                  (app [Hd | {replace-head Argz c0}]) 
+                  none (c1 \ context-end)),
+            coq.say "C" C
+            ),
+          Rules => (with-attributes (with-logging (builders.begin C)))
         )
     )
     (
       with-attributes (with-logging (interface.declare-mixin Arg Rules)),
       Rules => (
-      %std.findall (from _ _ _) FL,
-      %coq.say "FROMS" FL,
-%
-      %std.findall (mixin-class _ _) ML,
-      %coq.say "MIXINS" ML,
       %% generate the structure, first its name
       argument-name Arg N, 
       Nstruct = {calc (N ^ "STRUCT")},
       %% then its type 
       sort Univ = {{Type}},
-      % with-attributes (with-logging (about.main N)), 
       %% then the {T of N T &} structure
       coq.locate-all N All,
-      coq.say "All=" All,
       All = [loc-abbreviation GR|_],
       coq.notation.abbreviation-body GR NArgs _Bods,
       coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
       coq.safe-dest-app Trrr Hd Argz, !, 
+      coq.say "Argz" Argz,
       coq.locate "sigT" (indt SigT), 
       coq.locate "prod" (indt Prod), 
       coq.locate "False" (indt FFalse), 
       B = app [global (indt SigT), _, 
         fun `T` _ c0 \  app
           [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
-      % coq.say "in interface : Nstruct" Nstruct "B" B "Univ" Univ,
       %% then call for building the structure
       Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
       % acc-clauses current Rules
@@ -1395,11 +1391,11 @@ main [indt-decl D] :- !,
   with-attributes (
   if (get-option "alternative" S) 
     (
-      record-decl->id D _N, with-attributes (actions S) 
+      record-decl->id D _N, with-attributes (actions S), 
       % coq.say "Here at least",
-      % NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
+      NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
       % coq.say "itnemedaire",
-      % actions-builders NewId,
+      actions-builders NewId
       % coq.say "finished"
     ) 
     (record-decl->id D N, with-attributes (actions N),
@@ -1410,8 +1406,8 @@ main [const-decl _N _ _] :-
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
   with-attributes (
   if (get-option "alternative" S) 
-    (with-attributes (actions S) 
-    % actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
+    (with-attributes (actions S), 
+    actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
     ) 
     (coq.error "HB: using a const-decl without attribute alternative")).
 

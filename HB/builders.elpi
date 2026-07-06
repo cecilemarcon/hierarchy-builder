@@ -10,6 +10,7 @@ begin CtxSkel :-
   log.coq.env.begin-module Name none,
 
   builders.private.factory CtxSkel IDF GRF,
+  coq.say "IDF" IDF,
 
   % the Super module to access operations/axioms shadowed by the ones in the factory
   if-verbose (coq.say {header} "begin module Super"),
@@ -23,7 +24,9 @@ begin CtxSkel :-
 
   log.coq.env.begin-section Name,
   if-verbose (coq.say {header} "postulating factories"),
-  builders.private.postulate-factories Name IDF CtxSkel
+  coq.say "before postulate",
+  builders.private.postulate-factories Name IDF CtxSkel,
+  coq.say "here i'm done"
 .
 
 }
@@ -101,11 +104,17 @@ declare-shadowed-located Id (loc-abbreviation Abbrev) :-
 func postulate-factory-abbrev term, list term, id, factoryname -> term.
 postulate-factory-abbrev TheType Params Name Falias TheFactory :- std.do! [
   std.assert-ok! (factory-alias->gref Falias F) "HB",
+  coq.say "hi62",
   phant-abbrev F _ Fabv,
+  coq.say "hi63",
   coq.notation.abbreviation Fabv {std.append Params [TheType]} Package,
+  coq.say "hi64, Name" Name,
   Msg is "Unable to declare factory " ^ Name,
+  coq.say "hi65",
   std.assert-ok! (coq.typecheck-ty Package _) Msg,
+  coq.say "hi66",
   log.coq.env.add-section-variable-noimplicits Name Package C,
+  coq.say "hi67",
   TheFactory = global (const C),
 ].
 
@@ -140,14 +149,22 @@ factory _ _ _ :- !, coq.error "the last context item is not a factory".
 func postulate-factories id, string, context-decl.
 postulate-factories ModName IDF CDecl :-
   factory.cdecl->w-mixins CDecl (pr FLwP _),
+  coq.say "hi",
   context.declare.params-key FLwP ParamsSection FKey FLwA,
+  coq.say "hi2",
   std.assert! (FLwA = [triple GRF _ _])
     "HB: cannot declare builders for more than one factory at a time",
+  coq.say "hi3",
   gref->deps GRF DepswPRaw,
+  coq.say "hi4",
   context.declare.mixins FKey ParamsSection DepswPRaw _ _ _,
+  coq.say "hi5",
   std.map ParamsSection triple_2 FParams,
+  coq.say "hi6, IDF: " IDF,
   postulate-factory-abbrev FKey FParams IDF GRF TheFactory,
+  coq.say "hi7",
   define-factory-operations FKey FParams TheFactory GRF,
+  coq.say "hi8",
   acc-clause current (current-mode (builder-from FKey TheFactory GRF ModName)).
 
 }

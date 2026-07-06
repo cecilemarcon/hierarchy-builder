@@ -6,7 +6,7 @@ namespace structure {
 % HB.structure Definition S P1 P2 := { T of F1 P1 T & F2 P1 (P2*P2) T }
 %  cons p1\ cons p2\ nil t\ [triple f1 [p1] t,triple f2 [p1, {{p1 * p2}}] t]
 pred declare i:string, i:term, i:sort.
-declare Module BSkel Sort :- std.do! [
+declare Module BSkel Sort :- coq.say "Body" BSkel, std.do! [
   disable-id-phant BSkel BSkelNoId,
   std.assert-ok! (coq.elaborate-skeleton BSkelNoId _ BNoId) "illtyped structure definition",
   re-enable-id-phant BNoId B,
