@@ -1340,18 +1340,10 @@ main [Arg , str "&" | PotDeps] :- !,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
         ( coq.say "found an interface with this name already !",
-          read-potential-deps PotDeps HdDeps,
-          % coq.say "HdDeps" HdDeps,
-          Arg = indt-decl
-            (parameter Pa explicit _ Rec ),  
-          NewArg =
-            indt-decl (
-              parameter Pa explicit _
-                (c0 \
-                  parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
-                    (c1 \
-                      Rec c0))
-            ),
+          read-potential-deps PotDeps HdDeps,         
+          Arg = indt-decl (parameter Pa explicit Ty Rec),
+          add-deps HdDeps Rec Rec',
+          NewArg = indt-decl (parameter Pa explicit Ty Rec'),
           with-attributes (with-logging (interface.declare S NewArg Rules)),
           Rules => (
             coq.say "S" S,
@@ -1373,21 +1365,16 @@ main [Arg , str "&" | PotDeps] :- !,
         )
     )
     (
-      % coq.say "Arg" Arg,
+      coq.say "Arg" Arg,
       if (get-option "diff" DiffN)
       (
         read-potential-deps PotDeps HdDeps,
         % coq.say "HdDeps" HdDeps,
-        Arg = indt-decl
-          (parameter Pa explicit _ Rec ),  
-        NewArg =
-          indt-decl (
-            parameter Pa explicit _
-              (c0 \
-                parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
-                  (c1 \
-                    Rec c0))
-          ),
+        Arg = indt-decl (parameter Pa explicit Ty Rec),
+        add-deps HdDeps Rec Rec',
+        NewArg = indt-decl (parameter Pa explicit Ty Rec'),
+        coq.say "NewArg" NewArg,
+        coq.say "HdDeps" HdDeps,
         with-attributes (with-logging (interface.declare-mixin-renamed DiffN NewArg Rules)),
         Rules => (
         %% generate the structure, first its name
@@ -1414,24 +1401,37 @@ main [Arg , str "&" | PotDeps] :- !,
         coq.error "As a temporary measure, use the attribute \"diff=\" for the mixin name"
       )
     )).
-pred read-potential-deps i:list argument o:any.
-  read-potential-deps [] [].
-  read-potential-deps [str F , str FP | _Q ] Hd :- 
-    coq.locate-all F All,
-    All = [loc-abbreviation GR|_],
-    coq.notation.abbreviation-body GR NArgs _Bods,
-    coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
-    coq.safe-dest-app Trrr Hd _Argz, !, 
-    % coq.say "\nArgz" Argz "Trrr" Trrr "Hd" Hd "GR" GR,
-    coq.locate-module F L,
-    coq.locate-all F L',
-    coq.locate-all FP LP,
-    coq.say L L' LP "\n".
-  read-potential-deps [str F , str FP , str "&" | _Q ] [] :- 
-    coq.locate-all F L,
-    coq.locate-all FP LP,
-    coq.say L LP.
-    % app [F | FP]
+
+pred read-potential-deps i:list argument o:list term.
+read-potential-deps [] [].
+read-potential-deps [str F | Rest] [Hd | Hds] :-
+  interface->hd F Hd,
+  skip-until-esp Rest Tail,
+  read-potential-deps Tail Hds.
+
+pred interface->hd i:string o:term.
+interface->hd F Hd :-
+  coq.locate-all F All,
+  All = [loc-abbreviation GR|_],
+  coq.notation.abbreviation-body GR NArgs _,
+  coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+  coq.safe-dest-app Trrr Hd _.
+
+pred skip-until-esp i:list argument o:list argument.
+skip-until-esp [] [].
+skip-until-esp [str "&" | Rest] Rest :- !.
+skip-until-esp [_ | Rest] Tail :-
+  skip-until-esp Rest Tail.
+
+pred add-deps i:list term, i:(term -> indt-decl), o:(term -> indt-decl).
+add-deps [] Rec Rec.
+add-deps [Hd|Hs] Rec NewRec :-
+  add-deps Hs
+    (c0 \
+      parameter {coq.name->id `_`} explicit (app [Hd,c0])
+        (c1 \
+          Rec c0))
+    NewRec.
 }}.
 
 

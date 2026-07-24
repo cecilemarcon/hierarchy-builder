@@ -26,11 +26,22 @@ HB.mixin Record A' T := {
 
 HB.structure Definition AS := {T of A' T &}. 
 
+
+HB.mixin Record C' T := {
+    c' : T ;
+  }.
+
+HB.structure Definition CS := {T of C' T &}. 
+
 HB.mixin Record B' T of A' T:= { 
     b' : forall x:T, a' x x = x;
 }.
 
 HB.structure Definition BS := sigT (fun T => (prod (B' T) False)%type).
+
+HB.mixin Record D' T of A' T & C' T := { 
+  d' : forall x:T, a' x c' = x ;
+}.
 
 
 #[diff="isA"]
@@ -38,11 +49,22 @@ HB.interface Record A T := {
     a : T -> T -> T;
   }.
 
+#[diff="isC"]
+HB.interface Record C T := {
+    c : T
+  }.
+
 (* TODO should become B T := A T & {} *)
 #[diff="B_isA"]
 HB.interface Record B T := { 
     b : forall x:T, a x x = x ;
 } & A T.
+
+#[diff="D_isAandC"]
+HB.interface Record D T := { 
+  d : forall x:T, a x c = x ;
+} & A T & C T.
+
 
 (* <=> HB.mixin Record A_isB T of A T := { 
     b : forall x:T, a x x = x ;
