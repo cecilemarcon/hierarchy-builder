@@ -480,7 +480,7 @@ Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate lp:{{
 
 :name "start"
-main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
+main [A] :- coq.say "A" A, with-attributes (with-logging (factory.declare-mixin A)).
 }}.
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -1254,14 +1254,6 @@ func argument-name argument -> string.
 
 pred get-parameter argument -> id. 
   get-parameter (indt-decl (parameter T explicit _ _ \ _)) T.
-
-pred give-type list located.
-give-type [].
-give-type [loc-gref X|_Y] :- 
-  coq.say "wo" X, 
-  coq.env.typeof X TX, 
-  coq.say TX.
-
 pred replace-head list term, term -> list term.
   replace-head [_|Rest] C0 [C0|Rest].
 
@@ -1318,7 +1310,6 @@ main [Arg] :-
       coq.notation.abbreviation-body GR NArgs _Bods,
       coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
       coq.safe-dest-app Trrr Hd Argz, !, 
-      coq.say "Argz" Argz,
       coq.locate "sigT" (indt SigT), 
       coq.locate "prod" (indt Prod), 
       coq.locate "False" (indt FFalse), 
@@ -1329,6 +1320,110 @@ main [Arg] :-
       Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
       % acc-clauses current Rules
     )).
+
+main [Arg , str "&" | PotDeps] :- !,
+  with-attributes (
+  % if "alternative" attribute, we declare a factory, else a mixin and a structure
+  if (get-option "alternative" S) 
+    (% FIXME, should create a name for the factory if none found (for now it's an error caught by coq)
+      if (S = "") 
+        (coq.error "give me a name for this factory")
+        (true),
+      argument-name Arg N, 
+     % checks if a mixin of the same name has already been declared 
+      coq.locate-all N All,
+      std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
+      if (L = []) 
+        (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
+        ( coq.say "found an interface with this name already !",
+          with-attributes (with-logging (interface.declare S Arg Rules)),
+          Rules => (
+            coq.say "S" S,
+            coq.locate-all S AllS,
+            AllS = [loc-abbreviation GR|_],
+            coq.notation.abbreviation-body GR NArgs _Bods,
+            coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+            coq.safe-dest-app Trrr Hd Argz, !, 
+            coq.say GR NArgs "\nTrrr" Trrr "\nHd" Hd "\nArgz" Argz,
+            get-parameter Arg Tparam,
+            coq.say "ARGZ =" Argz,
+            std.length Argz Nl,
+            coq.say Nl,
+            C =
+              context-item Tparam explicit _ none (c0 \ 
+                  context-item {coq.name->id `_`} explicit 
+                  (app [Hd | {replace-head Argz c0}]) 
+                  none (c1 \ context-end)),
+            coq.say "C" C
+            ),
+          Rules => (with-attributes (with-logging (builders.begin C)))
+        )
+    )
+    (
+      % coq.say "Arg" Arg,
+      read-potential-deps PotDeps HdDeps,
+      % coq.say "HdDeps" HdDeps,
+      Arg = indt-decl
+        (parameter Pa explicit _ Rec ),  
+      NewArg =
+        indt-decl (
+          parameter Pa explicit _
+            (c0 \
+              parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
+                (c1 \
+                  Rec c0))
+        ),
+      % coq.say "Here0" Pa Rec,
+      % coq.say "Hd" Hd,
+      coq.say "Arg" Arg,
+      coq.say "Rec" Rec,
+      coq.say "NewArg" NewArg,
+      % ArgWDeps = indt-decl
+      %   (parameter CEC explicit _ _ \
+      %     end-record ), 
+      coq.say "Here1",
+      with-attributes (with-logging (interface.declare-mixin NewArg Rules)),
+      coq.say "Here2",
+      Rules => (
+      %% generate the structure, first its name
+      argument-name Arg N, 
+      Nstruct = {calc (N ^ "STRUCT")},
+      %% then its type 
+      sort Univ = {{Type}},
+      %% then the {T of N T &} structure
+      coq.locate-all N All,
+      All = [loc-abbreviation GR|_],
+      coq.notation.abbreviation-body GR NArgs _Bods,
+      coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+      coq.safe-dest-app Trrr Hd Argz, !, 
+      coq.locate "sigT" (indt SigT), 
+      coq.locate "prod" (indt Prod), 
+      coq.locate "False" (indt FFalse), 
+      B = app [global (indt SigT), _, 
+        fun `T` _ c0 \  app
+          [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
+      %% then call for building the structure
+      Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
+      % acc-clauses current Rules
+    )).
+pred read-potential-deps i:list argument o:any.
+  read-potential-deps [] [].
+  read-potential-deps [str F , str FP | _Q ] Hd :- 
+    coq.locate-all F All,
+    All = [loc-abbreviation GR|_],
+    coq.notation.abbreviation-body GR NArgs _Bods,
+    coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+    coq.safe-dest-app Trrr Hd _Argz, !, 
+    % coq.say "\nArgz" Argz "Trrr" Trrr "Hd" Hd "GR" GR,
+    coq.locate-module F L,
+    coq.locate-all F L',
+    coq.locate-all FP LP,
+    coq.say L L' LP "\n".
+  read-potential-deps [str F , str FP , str "&" | _Q ] [] :- 
+    coq.locate-all F L,
+    coq.locate-all FP LP,
+    coq.say L LP.
+    % app [F | FP]
 }}.
 
 
@@ -1392,11 +1487,8 @@ main [indt-decl D] :- !,
   if (get-option "alternative" S) 
     (
       record-decl->id D _N, with-attributes (actions S), 
-      % coq.say "Here at least",
       NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
-      % coq.say "itnemedaire",
       actions-builders NewId
-      % coq.say "finished"
     ) 
     (record-decl->id D N, with-attributes (actions N),
     with-attributes (actions-struct {calc (N ^ "STRUCT")}))
@@ -1411,8 +1503,44 @@ main [const-decl _N _ _] :-
     ) 
     (coq.error "HB: using a const-decl without attribute alternative")).
 
-main _ :-
-  coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … }.\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
+main [indt-decl D, str "&" | PotDeps] :- !,
+  coq.say "Deps" PotDeps,
+  read-potential-deps PotDeps _,
+  with-attributes (
+  if (get-option "alternative" S) 
+    (
+      record-decl->id D _N, with-attributes (actions S), 
+      NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
+      actions-builders NewId
+    ) 
+    (record-decl->id D N, with-attributes (actions N),
+    with-attributes (actions-struct {calc (N ^ "STRUCT")}))
+  ).
+pred read-potential-deps i:list argument o:any.
+  read-potential-deps [] [].
+  read-potential-deps [str F , str FP | _Q ] [] :- 
+    coq.locate-module F L,
+    coq.locate-all FP LP,
+    coq.say L LP.
+  read-potential-deps [str F , str FP , str "&" | _Q ] [] :- 
+    coq.locate-all F L,
+    coq.locate-all FP LP,
+    coq.say L LP.
+    % app [F | FP]
+
+main [const-decl _N _ _, str "&" | _] :- 
+  % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
+  % with-attributes (
+  % if (get-option "alternative" S) 
+  %   (with-attributes (actions S), 
+  %   actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
+  %   ) 
+  %   (coq.error "HB: using a const-decl without attribute alternative")).
+  coq.error "TODO".
+
+
+main A :- coq.say "A" A,
+  coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … } & F' T & ….\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
 }}.
 
 

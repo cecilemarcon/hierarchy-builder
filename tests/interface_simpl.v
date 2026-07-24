@@ -20,20 +20,17 @@ Elpi check_arg (1 = true). *)
 
 (* SMALL TESTS *)
 
-HB.mixin Record isTest T := {
-    test1 : T -> T -> T;
-    test2 : forall x y z, test1 x (test1 y z) = test1 (test1 x y) z
+HB.mixin Record A' T := {
+    a' : T -> T -> T;
   }.
 
-HB.structure Definition testS := {T of isTest T &}. 
+HB.structure Definition AS := {T of A' T &}. 
 
-HB.mixin Record isT T of isTest T := { 
-    a1 : T;
-    a2 : forall x, test1 a1 x = x;
-    a5 : forall x, exists xinv, test1 xinv x = a1;
+HB.mixin Record B' T of A' T:= { 
+    b' : forall x:T, a' x x = x;
 }.
 
-HB.structure Definition TS' := sigT (fun T => (prod (isT T) False)%type).
+HB.structure Definition BS := sigT (fun T => (prod (B' T) False)%type).
 
 
 
@@ -41,10 +38,21 @@ HB.interface Record A T := {
     a : T -> T -> T;
   }.
 
-(* TODO should become B T := A T + {} *)
-HB.interface Record B T of A T := { 
-    b : forall x:T, a x x = x
+(* TODO should become B T := A T & {} *)
+HB.interface Record B T := { 
+    b : forall x:T, a x x = x ;
+} & A T.
+
+(* <=> HB.mixin Record A_isB T of A T := { 
+    b : forall x:T, a x x = x ;
+    b2 : T
 }.
+
+HB.structure Definition B := {T of A T & A_isB T}.
+
+*)
+
+
 
 (* HB.structure Definition TS' := sigT (fun T => (prod (isT T) False)%type). *)
 
@@ -57,18 +65,34 @@ HB.interface Record B T of A T := {
 (* BASIC ALGEBRA *)
 
 (* Interface should behave as a mixin *)
+(* #[diff="iMagma"] *)
 HB.interface Record Magma T := {
     op : T -> T -> T;
 }. 
 
-HB.interface Record SemiGroup T of Magma T := {
+(* #[diff="Magma_isSemiGroup"] *)
+HB.interface Record SemiGroup T := {
   opA : forall x y z:T, op x (op y z) = op (op x y) z
-}.
+} & Magma T.
 
 (* TODO when changing instance : in one line *)
 HB.instance  Definition _ := Magma.Build Z Z.add.
 HB.instance  Definition _ := SemiGroup.Build Z Z.add_assoc.
 
+(* TODO : in instance, the constructor should be the name of the diff, not name of interface, because the constructors may in fine mean different things, like :
+
+HB.interface Definition SemiGroup T := Magma T & Associative (op T).
+*)
+
+(* #[alternative, diff="Magma_isSemiGroup"]
+HB.interface Record SemiGroup T := {
+  opA : forall x y z:T, op x (op y z) = op (op x y) z
+} & Magma T.
+Proof. by []. Qed. *)
+
+
+HB.about SemiGroup.
+HB.about SemiGroupSTRUCT.
 Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
 
