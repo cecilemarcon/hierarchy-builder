@@ -33,12 +33,13 @@ HB.mixin Record B' T of A' T:= {
 HB.structure Definition BS := sigT (fun T => (prod (B' T) False)%type).
 
 
-
+#[diff="isA"]
 HB.interface Record A T := {
     a : T -> T -> T;
   }.
 
 (* TODO should become B T := A T & {} *)
+#[diff="B_isA"]
 HB.interface Record B T := { 
     b : forall x:T, a x x = x ;
 } & A T.
@@ -65,19 +66,19 @@ HB.structure Definition B := {T of A T & A_isB T}.
 (* BASIC ALGEBRA *)
 
 (* Interface should behave as a mixin *)
-(* #[diff="iMagma"] *)
+#[diff="isMagma"]
 HB.interface Record Magma T := {
     op : T -> T -> T;
 }. 
 
-(* #[diff="Magma_isSemiGroup"] *)
+#[diff="Magma_isSemiGroup"]
 HB.interface Record SemiGroup T := {
   opA : forall x y z:T, op x (op y z) = op (op x y) z
 } & Magma T.
 
 (* TODO when changing instance : in one line *)
-HB.instance  Definition _ := Magma.Build Z Z.add.
-HB.instance  Definition _ := SemiGroup.Build Z Z.add_assoc.
+HB.instance  Definition _ := isMagma.Build Z Z.add.
+HB.instance  Definition _ := Magma_isSemiGroup.Build Z Z.add_assoc.
 
 (* TODO : in instance, the constructor should be the name of the diff, not name of interface, because the constructors may in fine mean different things, like :
 
@@ -92,8 +93,7 @@ Proof. by []. Qed. *)
 
 
 HB.about SemiGroup.
-HB.about SemiGroupSTRUCT.
-Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (op y z).
+Lemma lestfassoc (T : SemiGroup.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
 
 
@@ -101,21 +101,22 @@ Lemma lestfassoc (T : SemiGroupSTRUCT.type) (x y z : T) : op (op x y) z = op x (
 
 
 
-
-HB.interface Record Group T of SemiGroupSTRUCT T := { 
+#[diff="SemiGroup_isGroup"]
+HB.interface Record Group T := { 
     e : T;
     idl : forall x, op e x = x;
     idr : forall x, op x e = x;
     invl : forall x, exists xinv, op x xinv = e;
     invr : forall x, exists xinv, op xinv x = e;
-}.
+} & SemiGroup T.
 
 (* Print GroupSTRUCT.
 Print Group. *)
 
-HB.interface Record ComGroup T of GroupSTRUCT T := { 
+#[diff="Group_isComGroup"]
+HB.interface Record ComGroup T := { 
     opC : forall x y:T, op x y = op y x;
-}.
+} & Group T.
 
 (* HB.structure Definition ComGroupS := {T of ComGroup T &}.  *)
 
@@ -139,31 +140,34 @@ HB.instance Definition _ := ComGroup.Build T opC.
 
 HB.end.  *)
 
-#[alternative="ComGroupFromSemiGroup"] HB.interface Record ComGroup T of SemiGroupSTRUCT T:= { (*of SemiGroup T*)
-    opC : forall x y:T, op x y = op y x;
+#[alternative="ComGroupFromSemiGroup"] 
+HB.interface Record ComGroup T := { (*of SemiGroup T*)
+    opC : forall x0 y:T, op x0 y = op y x0;
     e : T;
-    idr : forall x, op x e = x;
-    invr : forall x, exists xinv, op xinv x = e;
-}.
+    idr : forall x1, op x1 e = x1;
+    invr : forall x2, exists xinv, op xinv x2 = e; 
+} & SemiGroup T.
+
 Lemma invl : forall x, exists xinv, op x xinv = e.
   intros. destruct (invr x). exists x0. rewrite opC. auto. Qed.
 Lemma idl : forall x, op e x = x. 
     intros. rewrite opC. apply idr. Qed. 
 Locate idl.
-HB.instance Definition _ := Group.Build T e idl idr invl invr.
-HB.instance Definition _ := ComGroup.Build T opC.
+HB.instance Definition _ := SemiGroup_isGroup.Build T e idl idr invl invr.
+HB.instance Definition _ := Group_isComGroup.Build T opC.
 
 HB.end. 
 
 
-HB.interface Record ComMonoid T of Magma T := {
+#[diff="Magma_isComMonoid"]
+HB.interface Record ComMonoid T := {
   opC' : forall x y:T, op x y = op y x
-}.
+} & Magma T.
 
 #[alternative="ComGroupFromGroupAndComMonoid"] HB.interface Record ComGroup T of 
-  GroupSTRUCT T & ComMonoid T := { (*of SemiGroup T*)
+  Group T & ComMonoid T := { (*of SemiGroup T*)
 }.
-HB.instance Definition _ := ComGroup.Build T opC'.
+HB.instance Definition _ := Group_isComGroup.Build T opC'.
 HB.end. 
 
 Check 0.

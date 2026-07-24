@@ -16,6 +16,9 @@ declare Name A Clauses :- private.declare-asset-renamed Name A private.asset-fac
 func declare-mixin argument -> list prop. 
 declare-mixin A Clauses :- private.declare-asset A private.asset-mixin Clauses.
 
+func declare-mixin-renamed string, argument -> list prop. 
+declare-mixin-renamed Name A Clauses :- private.declare-asset-renamed Name A private.asset-mixin Clauses.
+
 kind factory-abbrev type.
 type by-classname gref -> factory-abbrev.
 type by-phantabbrev abbreviation -> factory-abbrev.
@@ -361,7 +364,9 @@ declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
 
   export.module {calc (Module ^ ".Exports")} Exports,
 
+  coq.say "aqui",
   GRDepsClauses => declare-abbrev Module FactAbbrev _,
+  coq.say "ici"
 ].
 
 

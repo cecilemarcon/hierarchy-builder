@@ -1281,44 +1281,48 @@ main [Arg] :-
             coq.notation.abbreviation-body GR NArgs _Bods,
             coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
             coq.safe-dest-app Trrr Hd Argz, !, 
-            coq.say GR NArgs "\nTrrr" Trrr "\nHd" Hd "\nArgz" Argz,
             get-parameter Arg Tparam,
-            coq.say "ARGZ =" Argz,
             std.length Argz Nl,
             coq.say Nl,
             C =
               context-item Tparam explicit _ none (c0 \ 
                   context-item {coq.name->id `_`} explicit 
                   (app [Hd | {replace-head Argz c0}]) 
-                  none (c1 \ context-end)),
-            coq.say "C" C
+                  none (c1 \ context-end))
             ),
           Rules => (with-attributes (with-logging (builders.begin C)))
         )
     )
     (
-      with-attributes (with-logging (interface.declare-mixin Arg Rules)),
-      Rules => (
-      %% generate the structure, first its name
-      argument-name Arg N, 
-      Nstruct = {calc (N ^ "STRUCT")},
-      %% then its type 
-      sort Univ = {{Type}},
-      %% then the {T of N T &} structure
-      coq.locate-all N All,
-      All = [loc-abbreviation GR|_],
-      coq.notation.abbreviation-body GR NArgs _Bods,
-      coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
-      coq.safe-dest-app Trrr Hd Argz, !, 
-      coq.locate "sigT" (indt SigT), 
-      coq.locate "prod" (indt Prod), 
-      coq.locate "False" (indt FFalse), 
-      B = app [global (indt SigT), _, 
-        fun `T` _ c0 \  app
-          [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
-      %% then call for building the structure
-      Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
-      % acc-clauses current Rules
+      if (get-option "diff" DiffN)
+      (
+        with-attributes (with-logging (interface.declare-mixin-renamed DiffN Arg Rules)),
+        coq.say "here",
+        Rules => (
+        %% generate the structure, first its name
+        argument-name Arg N, 
+        %% then its type 
+        sort Univ = {{Type}},
+        %% then the {T of N T &} structure
+        coq.locate-all DiffN All,
+        All = [loc-abbreviation GR|_],
+        coq.notation.abbreviation-body GR NArgs _Bods,
+        coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+        coq.safe-dest-app Trrr Hd Argz, !, 
+        coq.locate "sigT" (indt SigT), 
+        coq.locate "prod" (indt Prod), 
+        coq.locate "False" (indt FFalse), 
+        B = app [global (indt SigT), _, 
+          fun `T` _ c0 \  app
+            [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
+        coq.say "lol",
+        %% then call for building the structure
+        Rules => (with-attributes (with-logging (structure.declare N B Univ)))
+        % acc-clauses current Rules
+      )
+      (
+        coq.error "As a temporary measure, use the attribute \"diff=\" for the mixin name" 
+      )
     )).
 
 main [Arg , str "&" | PotDeps] :- !,
@@ -1336,7 +1340,19 @@ main [Arg , str "&" | PotDeps] :- !,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
         ( coq.say "found an interface with this name already !",
-          with-attributes (with-logging (interface.declare S Arg Rules)),
+          read-potential-deps PotDeps HdDeps,
+          % coq.say "HdDeps" HdDeps,
+          Arg = indt-decl
+            (parameter Pa explicit _ Rec ),  
+          NewArg =
+            indt-decl (
+              parameter Pa explicit _
+                (c0 \
+                  parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
+                    (c1 \
+                      Rec c0))
+            ),
+          with-attributes (with-logging (interface.declare S NewArg Rules)),
           Rules => (
             coq.say "S" S,
             coq.locate-all S AllS,
@@ -1344,67 +1360,59 @@ main [Arg , str "&" | PotDeps] :- !,
             coq.notation.abbreviation-body GR NArgs _Bods,
             coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
             coq.safe-dest-app Trrr Hd Argz, !, 
-            coq.say GR NArgs "\nTrrr" Trrr "\nHd" Hd "\nArgz" Argz,
             get-parameter Arg Tparam,
-            coq.say "ARGZ =" Argz,
             std.length Argz Nl,
             coq.say Nl,
             C =
               context-item Tparam explicit _ none (c0 \ 
                   context-item {coq.name->id `_`} explicit 
                   (app [Hd | {replace-head Argz c0}]) 
-                  none (c1 \ context-end)),
-            coq.say "C" C
+                  none (c1 \ context-end))
             ),
           Rules => (with-attributes (with-logging (builders.begin C)))
         )
     )
     (
       % coq.say "Arg" Arg,
-      read-potential-deps PotDeps HdDeps,
-      % coq.say "HdDeps" HdDeps,
-      Arg = indt-decl
-        (parameter Pa explicit _ Rec ),  
-      NewArg =
-        indt-decl (
-          parameter Pa explicit _
-            (c0 \
-              parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
-                (c1 \
-                  Rec c0))
-        ),
-      % coq.say "Here0" Pa Rec,
-      % coq.say "Hd" Hd,
-      coq.say "Arg" Arg,
-      coq.say "Rec" Rec,
-      coq.say "NewArg" NewArg,
-      % ArgWDeps = indt-decl
-      %   (parameter CEC explicit _ _ \
-      %     end-record ), 
-      coq.say "Here1",
-      with-attributes (with-logging (interface.declare-mixin NewArg Rules)),
-      coq.say "Here2",
-      Rules => (
-      %% generate the structure, first its name
-      argument-name Arg N, 
-      Nstruct = {calc (N ^ "STRUCT")},
-      %% then its type 
-      sort Univ = {{Type}},
-      %% then the {T of N T &} structure
-      coq.locate-all N All,
-      All = [loc-abbreviation GR|_],
-      coq.notation.abbreviation-body GR NArgs _Bods,
-      coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
-      coq.safe-dest-app Trrr Hd Argz, !, 
-      coq.locate "sigT" (indt SigT), 
-      coq.locate "prod" (indt Prod), 
-      coq.locate "False" (indt FFalse), 
-      B = app [global (indt SigT), _, 
-        fun `T` _ c0 \  app
-          [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
-      %% then call for building the structure
-      Rules => (with-attributes (with-logging (structure.declare Nstruct B Univ)))
-      % acc-clauses current Rules
+      if (get-option "diff" DiffN)
+      (
+        read-potential-deps PotDeps HdDeps,
+        % coq.say "HdDeps" HdDeps,
+        Arg = indt-decl
+          (parameter Pa explicit _ Rec ),  
+        NewArg =
+          indt-decl (
+            parameter Pa explicit _
+              (c0 \
+                parameter {coq.name->id `_`} explicit (app [HdDeps, c0])
+                  (c1 \
+                    Rec c0))
+          ),
+        with-attributes (with-logging (interface.declare-mixin-renamed DiffN NewArg Rules)),
+        Rules => (
+        %% generate the structure, first its name
+        argument-name Arg N, 
+        %% then its type 
+        sort Univ = {{Type}},
+        %% then the {T of N T &} structure
+        coq.locate-all DiffN All,
+        All = [loc-abbreviation GR|_],
+        coq.notation.abbreviation-body GR NArgs _Bods,
+        coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+        coq.safe-dest-app Trrr Hd Argz, !, 
+        coq.locate "sigT" (indt SigT), 
+        coq.locate "prod" (indt Prod), 
+        coq.locate "False" (indt FFalse), 
+        B = app [global (indt SigT), _, 
+          fun `T` _ c0 \  app
+            [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
+        %% then call for building the structure
+        Rules => (with-attributes (with-logging (structure.declare N B Univ)))
+        % acc-clauses current Rules
+      )
+      (
+        coq.error "As a temporary measure, use the attribute \"diff=\" for the mixin name"
+      )
     )).
 pred read-potential-deps i:list argument o:any.
   read-potential-deps [] [].
@@ -1490,8 +1498,16 @@ main [indt-decl D] :- !,
       NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
       actions-builders NewId
     ) 
-    (record-decl->id D N, with-attributes (actions N),
-    with-attributes (actions-struct {calc (N ^ "STRUCT")}))
+    ( 
+      if (get-option "diff" DiffN)
+      (
+        record-decl->id D N, with-attributes (actions DiffN),
+        with-attributes (actions-struct N)
+      )
+      (
+        coq.error "As a temporary measure, use the attribute \"diff=\" for the mixin name" 
+      )
+    )
   ).
 
 main [const-decl _N _ _] :- 
@@ -1504,7 +1520,6 @@ main [const-decl _N _ _] :-
     (coq.error "HB: using a const-decl without attribute alternative")).
 
 main [indt-decl D, str "&" | PotDeps] :- !,
-  coq.say "Deps" PotDeps,
   read-potential-deps PotDeps _,
   with-attributes (
   if (get-option "alternative" S) 
@@ -1513,8 +1528,16 @@ main [indt-decl D, str "&" | PotDeps] :- !,
       NewId = {calc ("Builders_" ^ {std.any->string {new_int} })},
       actions-builders NewId
     ) 
-    (record-decl->id D N, with-attributes (actions N),
-    with-attributes (actions-struct {calc (N ^ "STRUCT")}))
+    (
+      if (get-option "diff" DiffN)
+      (
+        record-decl->id D N, with-attributes (actions DiffN),
+        with-attributes (actions-struct N)
+      )
+      (
+        coq.error "As a temporary measure, use the attribute \"diff=\" for the mixin name" 
+      )
+    )
   ).
 pred read-potential-deps i:list argument o:any.
   read-potential-deps [] [].
