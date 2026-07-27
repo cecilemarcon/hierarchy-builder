@@ -6,13 +6,6 @@ namespace interface {
 func declare string, argument -> list prop.
 declare Name A Clauses :- private.declare-asset-renamed Name A private.asset-factory Clauses.
 
-% func declare-one-or-two-mixins argument -> list prop. 
-% declare-one-or-two-mixins A Clauses :- coq.say "HERE", 
-%   % coq.typecheck A _ D,
-%   % if (D = ok)
-%     declare-mixin A Clauses.
-%     % (coq.error "need to parse the &").
-
 func declare-mixin argument -> list prop. 
 declare-mixin A Clauses :- private.declare-asset A private.asset-mixin Clauses.
 
@@ -102,6 +95,37 @@ cdecl->w-mixins (context-item ID _ TySkel none Rest) Out :- !,
     ID TySkel Rest cdecl->w-mixins Out.
 cdecl->w-mixins _ _ :- !,
   coq.error "HB: declaration must have at least one parameter".
+
+pred interface->hd i:string o:term.
+interface->hd F Hd :-
+  coq.locate-all F All,
+  All = [loc-abbreviation GR|_],
+  coq.notation.abbreviation-body GR NArgs _,
+  coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
+  coq.safe-dest-app Trrr Hd _.
+
+pred skip-until-esp i:list argument o:list argument.
+skip-until-esp [] [].
+skip-until-esp [str "&" | Rest] Rest :- !.
+skip-until-esp [_ | Rest] Tail :-
+  skip-until-esp Rest Tail.
+
+pred add-deps i:list term, i:(term -> indt-decl), o:(term -> indt-decl).
+add-deps [] Rec Rec.
+add-deps [Hd|Hs] Rec NewRec :-
+  add-deps Hs
+    (c0 \
+      parameter {coq.name->id `_`} explicit (app [Hd,c0])
+        (c1 \
+          Rec c0))
+    NewRec.
+
+pred get-parameter argument -> id. 
+  get-parameter (indt-decl (parameter T explicit _ _ \ _)) T.
+
+pred replace-head list term, term -> list term.
+  replace-head [_|Rest] C0 [C0|Rest].
+
 
 /* ------------------------------------------------------------------------- */
 /* ----------------------------- private code ------------------------------ */
@@ -364,9 +388,7 @@ declare-mixin-or-factory MixinSrcClauses SectionCanonicalInstance
 
   export.module {calc (Module ^ ".Exports")} Exports,
 
-  coq.say "aqui",
-  GRDepsClauses => declare-abbrev Module FactAbbrev _,
-  coq.say "ici"
+  GRDepsClauses => declare-abbrev Module FactAbbrev _
 ].
 
 

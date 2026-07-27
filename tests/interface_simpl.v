@@ -1,21 +1,6 @@
 From HB Require Import structures.
 From Stdlib Require Import ZArith.
 
-(* 
-#[arguments(raw)] Elpi Command check_arg.
-Elpi Accumulate lp:{{
-
-  main [trm T] :-
-    coq.typecheck T Ty D,
-    if (D = ok)
-      (coq.say "The type of" T "is" Ty)
-      (true).
-}}.
-
-
-Elpi check_arg (1 = 0).
-Elpi check_arg (1 = true). *)
-
 
 
 (* SMALL TESTS *)
@@ -66,20 +51,6 @@ HB.interface Record D T := {
 } & A T & C T.
 
 
-(* <=> HB.mixin Record A_isB T of A T := { 
-    b : forall x:T, a x x = x ;
-    b2 : T
-}.
-
-HB.structure Definition B := {T of A T & A_isB T}.
-
-*)
-
-
-
-(* HB.structure Definition TS' := sigT (fun T => (prod (isT T) False)%type). *)
-
-
 
 
 
@@ -107,14 +78,6 @@ HB.instance  Definition _ := Magma_isSemiGroup.Build Z Z.add_assoc.
 HB.interface Definition SemiGroup T := Magma T & Associative (op T).
 *)
 
-(* #[alternative, diff="Magma_isSemiGroup"]
-HB.interface Record SemiGroup T := {
-  opA : forall x y z:T, op x (op y z) = op (op x y) z
-} & Magma T.
-Proof. by []. Qed. *)
-
-
-HB.about SemiGroup.
 Lemma lestfassoc (T : SemiGroup.type) (x y z : T) : op (op x y) z = op x (op y z).
   Proof. symmetry. apply opA. Qed.
 
@@ -132,35 +95,11 @@ HB.interface Record Group T := {
     invr : forall x, exists xinv, op xinv x = e;
 } & SemiGroup T.
 
-(* Print GroupSTRUCT.
-Print Group. *)
 
 #[diff="Group_isComGroup"]
 HB.interface Record ComGroup T := { 
     opC : forall x y:T, op x y = op y x;
 } & Group T.
-
-(* HB.structure Definition ComGroupS := {T of ComGroup T &}.  *)
-
-(* HB.factory Record ComGroup' T of SemiGroupSTRUCT T:= { (*of SemiGroup T*)
-    opC : forall x y:T, op x y = op y x;
-    e : T;
-    idr : forall x, op x e = x;
-    invr : forall x, exists xinv, op xinv x = e;
-}.
-
-
-HB.builders Context T (_: ComGroup' T).
-(* assumption *)
-Lemma invl : forall x, exists xinv, op x xinv = e.
-  intros. destruct (invr x). exists x0. rewrite opC. auto. Qed.
-Lemma idl : forall x, op e x = x. 
-    intros. rewrite opC. apply idr. Qed. 
-
-HB.instance Definition _ := Group.Build T e idl idr invl invr.
-HB.instance Definition _ := ComGroup.Build T opC.
-
-HB.end.  *)
 
 #[alternative="ComGroupFromSemiGroup"] 
 HB.interface Record ComGroup T := { (*of SemiGroup T*)
@@ -174,7 +113,7 @@ Lemma invl : forall x, exists xinv, op x xinv = e.
   intros. destruct (invr x). exists x0. rewrite opC. auto. Qed.
 Lemma idl : forall x, op e x = x. 
     intros. rewrite opC. apply idr. Qed. 
-Locate idl.
+
 HB.instance Definition _ := SemiGroup_isGroup.Build T e idl idr invl invr.
 HB.instance Definition _ := Group_isComGroup.Build T opC.
 
@@ -186,9 +125,9 @@ HB.interface Record ComMonoid T := {
   opC' : forall x y:T, op x y = op y x
 } & Magma T.
 
-#[alternative="ComGroupFromGroupAndComMonoid"] HB.interface Record ComGroup T of 
-  Group T & ComMonoid T := { (*of SemiGroup T*)
-}.
+#[alternative="ComGroupFromGroupAndComMonoid"] HB.interface Record ComGroup T := 
+{ (*of SemiGroup T*)
+} & Group T & ComMonoid T.
 HB.instance Definition _ := Group_isComGroup.Build T opC'.
 HB.end. 
 

@@ -480,7 +480,7 @@ Elpi Accumulate File "HB/about.elpi".
 Elpi Accumulate lp:{{
 
 :name "start"
-main [A] :- coq.say "A" A, with-attributes (with-logging (factory.declare-mixin A)).
+main [A] :- with-attributes (with-logging (factory.declare-mixin A)).
 }}.
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
 #[synterp] Elpi Accumulate Db export.db.
@@ -665,7 +665,6 @@ main [const-decl N (some B) Arity] :- std.do! [
   prod-last {coq.arity->term Arity} Ty,
   if (ground_term Ty) (Sort = Ty) (Sort = {{Type}}), sort Univ = Sort,
   with-attributes (with-logging (structure.declare N B Univ)),
-  % coq.say "N" N "B" B "Univ" Univ,
 ].
 
 }}.
@@ -920,7 +919,7 @@ Elpi Accumulate lp:{{
 
 %here
 :name "start"
-main [ctx-decl C] :- coq.say "Context :" C, with-attributes (with-logging (builders.begin C)).
+main [ctx-decl C] :- with-attributes (with-logging (builders.begin C)).
 
 }}.
 #[synterp] Elpi Accumulate File "HB/common/utils-synterp.elpi".
@@ -1242,21 +1241,6 @@ Elpi Accumulate File "HB/interface.elpi".
 Elpi Accumulate File "HB/factory.elpi".
 Elpi Accumulate File "HB/structure.elpi".
 Elpi Accumulate lp:{{
-%Here
-% TODO : figure out why I don't have access to this function which exists in factory.elpi
-func argument-name argument -> string.
-  argument-name (const-decl Id _ _) Id.
-  argument-name (indt-decl (parameter _ _ _ R)) Id :-
-    argument-name (indt-decl (R (sort prop))) Id.
-  argument-name (indt-decl (record Id _ _ _)) Id.
-  argument-name (indt-decl (inductive Id _ _ _)) Id.
-  argument-name (ctx-decl _) "_" :- !.
-
-pred get-parameter argument -> id. 
-  get-parameter (indt-decl (parameter T explicit _ _ \ _)) T.
-pred replace-head list term, term -> list term.
-  replace-head [_|Rest] C0 [C0|Rest].
-
 :name "start"
 main [Arg] :- 
   with-attributes (
@@ -1266,28 +1250,25 @@ main [Arg] :-
       if (S = "") 
         (coq.error "give me a name for this factory")
         (true),
-      argument-name Arg N, 
+      interface.argument-name Arg N, 
      % checks if a mixin of the same name has already been declared 
       coq.locate-all N All,
       std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
-        ( coq.say "found an interface with this name already !",
+        ( 
           with-attributes (with-logging (interface.declare S Arg Rules)),
           Rules => (
-            coq.say "S" S,
             coq.locate-all S AllS,
             AllS = [loc-abbreviation GR|_],
             coq.notation.abbreviation-body GR NArgs _Bods,
             coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
             coq.safe-dest-app Trrr Hd Argz, !, 
-            get-parameter Arg Tparam,
-            std.length Argz Nl,
-            coq.say Nl,
+            interface.get-parameter Arg Tparam,
             C =
               context-item Tparam explicit _ none (c0 \ 
                   context-item {coq.name->id `_`} explicit 
-                  (app [Hd | {replace-head Argz c0}]) 
+                  (app [Hd | {interface.replace-head Argz c0}]) 
                   none (c1 \ context-end))
             ),
           Rules => (with-attributes (with-logging (builders.begin C)))
@@ -1297,10 +1278,9 @@ main [Arg] :-
       if (get-option "diff" DiffN)
       (
         with-attributes (with-logging (interface.declare-mixin-renamed DiffN Arg Rules)),
-        coq.say "here",
         Rules => (
         %% generate the structure, first its name
-        argument-name Arg N, 
+        interface.argument-name Arg N, 
         %% then its type 
         sort Univ = {{Type}},
         %% then the {T of N T &} structure
@@ -1314,8 +1294,7 @@ main [Arg] :-
         coq.locate "False" (indt FFalse), 
         B = app [global (indt SigT), _, 
           fun `T` _ c0 \  app
-            [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
-        coq.say "lol",
+            [global (indt Prod), app [Hd | {(interface.replace-head Argz c0)}], global (indt FFalse)]]),
         %% then call for building the structure
         Rules => (with-attributes (with-logging (structure.declare N B Univ)))
         % acc-clauses current Rules
@@ -1333,52 +1312,45 @@ main [Arg , str "&" | PotDeps] :- !,
       if (S = "") 
         (coq.error "give me a name for this factory")
         (true),
-      argument-name Arg N, 
+      interface.argument-name Arg N, 
      % checks if a mixin of the same name has already been declared 
       coq.locate-all N All,
       std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
       if (L = []) 
         (coq.error "HB: no previous interface of" S", remove the \"alternative\" attribute.") true,
-        ( coq.say "found an interface with this name already !",
+        ( 
           read-potential-deps PotDeps HdDeps,         
           Arg = indt-decl (parameter Pa explicit Ty Rec),
-          add-deps HdDeps Rec Rec',
+          interface.add-deps HdDeps Rec Rec',
           NewArg = indt-decl (parameter Pa explicit Ty Rec'),
           with-attributes (with-logging (interface.declare S NewArg Rules)),
           Rules => (
-            coq.say "S" S,
             coq.locate-all S AllS,
             AllS = [loc-abbreviation GR|_],
             coq.notation.abbreviation-body GR NArgs _Bods,
             coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
             coq.safe-dest-app Trrr Hd Argz, !, 
-            get-parameter Arg Tparam,
-            std.length Argz Nl,
-            coq.say Nl,
+            interface.get-parameter Arg Tparam,
             C =
               context-item Tparam explicit _ none (c0 \ 
                   context-item {coq.name->id `_`} explicit 
-                  (app [Hd | {replace-head Argz c0}]) 
+                  (app [Hd | {interface.replace-head Argz c0}]) 
                   none (c1 \ context-end))
             ),
           Rules => (with-attributes (with-logging (builders.begin C)))
         )
     )
     (
-      coq.say "Arg" Arg,
       if (get-option "diff" DiffN)
       (
         read-potential-deps PotDeps HdDeps,
-        % coq.say "HdDeps" HdDeps,
         Arg = indt-decl (parameter Pa explicit Ty Rec),
-        add-deps HdDeps Rec Rec',
+        interface.add-deps HdDeps Rec Rec',
         NewArg = indt-decl (parameter Pa explicit Ty Rec'),
-        coq.say "NewArg" NewArg,
-        coq.say "HdDeps" HdDeps,
         with-attributes (with-logging (interface.declare-mixin-renamed DiffN NewArg Rules)),
         Rules => (
         %% generate the structure, first its name
-        argument-name Arg N, 
+        interface.argument-name Arg N, 
         %% then its type 
         sort Univ = {{Type}},
         %% then the {T of N T &} structure
@@ -1392,7 +1364,7 @@ main [Arg , str "&" | PotDeps] :- !,
         coq.locate "False" (indt FFalse), 
         B = app [global (indt SigT), _, 
           fun `T` _ c0 \  app
-            [global (indt Prod), app [Hd | {(replace-head Argz c0)}], global (indt FFalse)]]),
+            [global (indt Prod), app [Hd | {(interface.replace-head Argz c0)}], global (indt FFalse)]]),
         %% then call for building the structure
         Rules => (with-attributes (with-logging (structure.declare N B Univ)))
         % acc-clauses current Rules
@@ -1403,35 +1375,11 @@ main [Arg , str "&" | PotDeps] :- !,
     )).
 
 pred read-potential-deps i:list argument o:list term.
-read-potential-deps [] [].
-read-potential-deps [str F | Rest] [Hd | Hds] :-
-  interface->hd F Hd,
-  skip-until-esp Rest Tail,
-  read-potential-deps Tail Hds.
-
-pred interface->hd i:string o:term.
-interface->hd F Hd :-
-  coq.locate-all F All,
-  All = [loc-abbreviation GR|_],
-  coq.notation.abbreviation-body GR NArgs _,
-  coq.notation.abbreviation GR {coq.mk-n-holes NArgs} Trrr,
-  coq.safe-dest-app Trrr Hd _.
-
-pred skip-until-esp i:list argument o:list argument.
-skip-until-esp [] [].
-skip-until-esp [str "&" | Rest] Rest :- !.
-skip-until-esp [_ | Rest] Tail :-
-  skip-until-esp Rest Tail.
-
-pred add-deps i:list term, i:(term -> indt-decl), o:(term -> indt-decl).
-add-deps [] Rec Rec.
-add-deps [Hd|Hs] Rec NewRec :-
-  add-deps Hs
-    (c0 \
-      parameter {coq.name->id `_`} explicit (app [Hd,c0])
-        (c1 \
-          Rec c0))
-    NewRec.
+  read-potential-deps [] [].
+  read-potential-deps [str F | Rest] [Hd | Hds] :-
+    interface.interface->hd F Hd,
+    interface.skip-until-esp Rest Tail,
+    read-potential-deps Tail Hds.
 }}.
 
 
@@ -1442,52 +1390,52 @@ add-deps [Hd|Hs] Rec NewRec :-
 shorten coq.env.{ begin-module, end-module, begin-section, end-section, import-module, export-module }.
 
 pred actions i:id.
-actions N :-
-  begin-module N none,
-    begin-section N,
-    end-section,
-    begin-module "Exports" none,
-    end-module E,
-  end-module _,
-  export-module E,
-  coq.env.current-library File,
-  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
+  actions N :-
+    begin-module N none,
+      begin-section N,
+      end-section,
+      begin-module "Exports" none,
+      end-module E,
+    end-module _,
+    export-module E,
+    coq.env.current-library File,
+    coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)).
 
 pred actions-builders i:id.
-actions-builders N :-
-  begin-module N none,
-    begin-module "Super" none,
-    end-module _,
-    begin-section N.
+  actions-builders N :-
+    begin-module N none,
+      begin-module "Super" none,
+      end-module _,
+      begin-section N.
 
 pred actions-struct i:id.
-actions-struct N :-
-  begin-module N none,
-    begin-module "Exports" none,
-    end-module E,
-    import-module E,
-  end-module _,
-  export-module E,
-  begin-module {calc (N ^ "ElpiOperations")} none,
-  end-module O,
-  export-module O,
-  coq.env.current-library File,
-  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)),
-  coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)),
-  if (get-option "mathcomp" tt ; get-option "mathcomp.axiom" _) (actions-compat N) true.
+  actions-struct N :-
+    begin-module N none,
+      begin-module "Exports" none,
+      end-module E,
+      import-module E,
+    end-module _,
+    export-module E,
+    begin-module {calc (N ^ "ElpiOperations")} none,
+    end-module O,
+    export-module O,
+    coq.env.current-library File,
+    coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File E)),
+    coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)),
+    if (get-option "mathcomp" tt ; get-option "mathcomp.axiom" _) (actions-compat N) true.
 
 pred actions-compat i:id.
-actions-compat ModuleName :-
-  CompatModuleName is "MathCompCompat" ^ ModuleName,
-  begin-module CompatModuleName none,
-    begin-module ModuleName none,
-    end-module _,
-  end-module O,
-  export-module O,
-  % is this a bug?
-  % coq.env.current-library File,
-  % coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)).
-  true.
+  actions-compat ModuleName :-
+    CompatModuleName is "MathCompCompat" ^ ModuleName,
+    begin-module CompatModuleName none,
+      begin-module ModuleName none,
+      end-module _,
+    end-module O,
+    export-module O,
+    % is this a bug?
+    % coq.env.current-library File,
+    % coq.elpi.accumulate current "export.db" (clause _ _ (module-to-export File O)).
+    true.
 
 
 main [indt-decl D] :- !,
@@ -1510,17 +1458,7 @@ main [indt-decl D] :- !,
     )
   ).
 
-main [const-decl _N _ _] :- 
-  % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
-  with-attributes (
-  if (get-option "alternative" S) 
-    (with-attributes (actions S), 
-    actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
-    ) 
-    (coq.error "HB: using a const-decl without attribute alternative")).
-
-main [indt-decl D, str "&" | PotDeps] :- !,
-  read-potential-deps PotDeps _,
+main [indt-decl D, str "&" | _] :- !,
   with-attributes (
   if (get-option "alternative" S) 
     (
@@ -1539,30 +1477,18 @@ main [indt-decl D, str "&" | PotDeps] :- !,
       )
     )
   ).
-pred read-potential-deps i:list argument o:any.
-  read-potential-deps [] [].
-  read-potential-deps [str F , str FP | _Q ] [] :- 
-    coq.locate-module F L,
-    coq.locate-all FP LP,
-    coq.say L LP.
-  read-potential-deps [str F , str FP , str "&" | _Q ] [] :- 
-    coq.locate-all F L,
-    coq.locate-all FP LP,
-    coq.say L LP.
-    % app [F | FP]
 
-main [const-decl _N _ _, str "&" | _] :- 
+main [const-decl _N _ _ | _] :- 
   % This argument is only allowed for factories (not mixins) thus we check that there is the "alternative" attribute 
-  % with-attributes (
-  % if (get-option "alternative" S) 
-  %   (with-attributes (actions S), 
-  %   actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
-  %   ) 
-  %   (coq.error "HB: using a const-decl without attribute alternative")).
-  coq.error "TODO".
+  with-attributes (
+  if (get-option "alternative" S) 
+    (
+      with-attributes (actions S), 
+      actions-builders {calc ("Builders_" ^ {std.any->string {new_int} })}
+    ) 
+    (coq.error "HB: using a const-decl without attribute alternative")).
 
-
-main A :- coq.say "A" A,
+main _ :- 
   coq.error "Usage: HB.interface Record <InterfaceName> T & F A & … := { … } & F' T & ….\nUsage: HB.interface Definition <interfaceName> T of F A := t.".
 }}.
 
