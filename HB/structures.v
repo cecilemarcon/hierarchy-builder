@@ -796,8 +796,9 @@ main [T0, F0] :- !,
   with-attributes (with-logging (instance.declare-existing T0 F0)).
 
 }}.
-#[synterp] Elpi Accumulate lp:{{
 
+#[synterp] Elpi Accumulate lp:{{
+  
 shorten coq.env.{ begin-section, end-section }.
 
 main [const-decl _ _ (arity _)] :- !.
@@ -1498,6 +1499,46 @@ Elpi Typecheck.
 Elpi Export HB.interface. 
 
 
+
+
+
+#[arguments(raw)] Elpi Command HB.proof.
+Elpi Accumulate Db hb.db.
+Elpi Accumulate File "HB/common/stdpp.elpi".
+Elpi Accumulate File "HB/common/database.elpi".
+Elpi Accumulate File "HB/common/compat_acc_clauses_all.elpi".
+Elpi Accumulate File "HB/common/compat_add_secvar_all.elpi".
+Elpi Accumulate File "HB/common/utils.elpi".
+Elpi Accumulate File "HB/common/log.elpi".
+Elpi Accumulate File "HB/common/synthesis.elpi".
+Elpi Accumulate File "HB/context.elpi".
+Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate lp:{{
+
+:name "start"
+main [const-decl Name (some BodySkel) TyWPSkel] :- !,
+  coq.say "type given:" TyWPSkel,
+  with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _)).
+main [T0, F0] :- !,
+  coq.warning "HB" "HB.deprecated" "The syntax \"HB.instance Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
+  with-attributes (with-logging (instance.declare-existing T0 F0)).
+
+}}.
+
+#[synterp] Elpi Accumulate lp:{{
+  
+shorten coq.env.{ begin-section, end-section }.
+
+main [const-decl _ _ (arity _)] :- !.
+main [const-decl _ _ (parameter _ _ _ _)] :- !,
+  SectionName is "hb_instance_" ^ {std.any->string {new_int} },
+  begin-section SectionName, end-section.
+main [_, _] :- !.
+
+main _ :- coq.error "Usage: HB.proof Definition <Name> := <Builder> T ...".
+}}.
+Elpi Typecheck.
+Elpi Export HB.proof.
 
 
 

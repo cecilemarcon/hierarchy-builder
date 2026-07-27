@@ -34,10 +34,21 @@ HB.interface Record A T := {
     a : T -> T -> T;
   }.
 
+HB.proof Definition _ : isA Z := isA.Build Z Z.add.
+
+
 #[diff="isC"]
 HB.interface Record C T := {
     c : T
   }.
+
+HB.proof Definition _ : isC Z := isC.Build Z Z.zero.
+
+HB.proof Definition _ : isC nat :=
+  {| isC.c := 0 |}.
+
+
+
 
 (* TODO should become B T := A T & {} *)
 #[diff="B_isA"]
@@ -70,8 +81,9 @@ HB.interface Record SemiGroup T := {
 } & Magma T.
 
 (* TODO when changing instance : in one line *)
-HB.instance  Definition _ := isMagma.Build Z Z.add.
-HB.instance  Definition _ := Magma_isSemiGroup.Build Z Z.add_assoc.
+(* HB.instance  Definition _ := isMagma.Build Z Z.add. *)
+HB.instance Definition _ : isMagma Z := isMagma.Build Z Z.add.
+HB.instance Definition _ := Magma_isSemiGroup.Build Z Z.add_assoc.
 
 (* TODO : in instance, the constructor should be the name of the diff, not name of interface, because the constructors may in fine mean different things, like :
 
@@ -132,3 +144,21 @@ HB.instance Definition _ := Group_isComGroup.Build T opC'.
 HB.end. 
 
 Check 0.
+
+
+
+(* #[arguments(raw)] Elpi Command check_arg.
+Elpi Accumulate lp:{{
+
+main [str Interface, str Subject, indt-decl (record Body Id Bodyb IJ) ] :-
+    coq.say "Interface" Interface "Subject" Subject "Body" Body "Id" Id "Bodyb" Bodyb "IJ" IJ.
+
+main A :- coq.say "nope" A.
+}}.
+
+
+Elpi check_arg SemiGroup Z :=  { op := Z.add ; opA := Z.add_assoc }.
+
+
+HB.proof Definition _ := isMagma.Build Z Z.add.
+Elpi check_arg Definition _ : isMagma Z := isMagma.Build Z Z.add. *)
