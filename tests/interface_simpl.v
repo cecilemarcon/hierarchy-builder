@@ -1,8 +1,28 @@
 From HB Require Import structures.
-From Stdlib Require Import ZArith.
+From Stdlib Require Import ZArith List.
+Import ListNotations.
 
 
+Declare Custom Entry assignment.
+Record assignement {T1 T2} := Assign {lhs : T1 ; rhs : T2}.
+Definition dfltassign := Assign unit unit tt tt.
+Infix ":==" := Assign (at level 0).
+(* Notation "x ':=' y" := (Assign x y) (x at level 100, y at level 100, in custom assignment at level 0). *)
+(* Notation "'@{' a '}'" := a (at level 100, at level 0). *)
+(* Notation "'_'" := dfltassign (at level 0). *)
+(* Definition boolltassign := @{ tt :== tt }. *)
 
+Inductive assignement_tele : list Type -> list Type -> Type :=
+| NoAssign : assignement_tele [] []
+| ConsAssign {N A Ns As} :
+  @assignement N A -> assignement_tele Ns As ->
+  assignement_tele (N :: Ns) (A :: As).
+Notation "'{/' a1 ; .. ; an '/}'" := 
+  (ConsAssign a1 .. (ConsAssign an NoAssign) ..).
+  (* (a1 custom assignment, an custom assignment). *)
+
+
+  
 (* SMALL TESTS *)
 
 HB.mixin Record A' T := {
@@ -17,6 +37,8 @@ HB.mixin Record C' T := {
   }.
 
 HB.structure Definition CS := {T of C' T &}. 
+
+HB.instance Definition _ : C' bool := C'.Build bool true.
 
 HB.mixin Record B' T of A' T:= { 
     b' : forall x:T, a' x x = x;
@@ -34,7 +56,6 @@ HB.interface Record A T := {
     a : T -> T -> T;
   }.
 
-HB.proof Definition _ : isA Z := isA.Build Z Z.add.
 
 
 #[diff="isC"]
@@ -42,18 +63,31 @@ HB.interface Record C T := {
     c : T
   }.
 
-HB.proof Definition _ : isC Z := isC.Build Z Z.zero.
-
-HB.proof Definition _ : isC nat :=
-  {| isC.c := 0 |}.
-
-
+(* Locate isC.Axioms_.
+Print isC.
+*)
+(* HB.about C. 
 
 
+Check isC.Axioms_.
+Check C.axioms_.
+
+  
+ 
+About c.  *)
+HB.howto C.type.
+(* HB.howto isC. *)
+HB.proof Definition _ : C bool := {/ c :== true /}.
+(* HB.proof Definition _  := isC.Build bool true.
+HB.howto bool C.type. *)
+
+(* HB.proof C bool := {| c := true |}. *)
+
+(* 
 (* TODO should become B T := A T & {} *)
 #[diff="B_isA"]
 HB.interface Record B T := { 
-    b : forall x:T, a x x = x ;
+    b : forall x:T, a x x = x ; 
 } & A T.
 
 #[diff="D_isAandC"]
@@ -81,7 +115,6 @@ HB.interface Record SemiGroup T := {
 } & Magma T.
 
 (* TODO when changing instance : in one line *)
-(* HB.instance  Definition _ := isMagma.Build Z Z.add. *)
 HB.instance Definition _ : isMagma Z := isMagma.Build Z Z.add.
 HB.instance Definition _ := Magma_isSemiGroup.Build Z Z.add_assoc.
 
@@ -146,19 +179,42 @@ HB.end.
 Check 0.
 
 
-
-(* #[arguments(raw)] Elpi Command check_arg.
+(* 
+#[arguments(raw)] Elpi Command check_arg.
 Elpi Accumulate lp:{{
 
-main [str Interface, str Subject, indt-decl (record Body Id Bodyb IJ) ] :-
-    coq.say "Interface" Interface "Subject" Subject "Body" Body "Id" Id "Bodyb" Bodyb "IJ" IJ.
+main [const-decl Name (some BodySkel) TyWPSkel] :-
+  coq.say "type given:" TyWPSkel "\nBodySkel : " BodySkel "\nName" Name.
+  
+main A :- parse-fields A B, coq.say "A" A "\nB:" B.
 
-main A :- coq.say "nope" A.
+pred parse-fields i:list argument, o:list argument.
+parse-fields [] [].
+parse-fields [str ":="| Q] PQ :- 
+  parse-fields Q PQ.
+parse-fields [str "{|"| Q] PQ :- 
+  parse-fields Q PQ.
+parse-fields [str "|", str "}"] [].
+parse-fields [H|Q] [H|PQ] :- coq.say H, parse-fields Q PQ.
 }}.
 
 
-Elpi check_arg SemiGroup Z :=  { op := Z.add ; opA := Z.add_assoc }.
+(* Import isC. *)
+Elpi check_arg C nat := {| c := 0 |}.
 
 
-HB.proof Definition _ := isMagma.Build Z Z.add.
-Elpi check_arg Definition _ : isMagma Z := isMagma.Build Z Z.add. *)
+#[arguments(raw)] Elpi Command parse.
+Elpi Accumulate lp:{{
+
+main [const-decl Name (some BodySkel) TyWPSkel] :-
+  coq.say "type given:" TyWPSkel "\nBodySkel : " BodySkel "\nName" Name.
+  
+main A :- coq.say "lol" A.
+}}.
+
+
+(* Import isC. *)
+Elpi check_arg C nat := {| c := 0 |}.
+
+
+Elpi check_arg Definition _ : isC Z := isC.Build Z Z.add. *) *)

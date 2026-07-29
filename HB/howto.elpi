@@ -13,7 +13,8 @@ main-str S STgt Depth :- coq.locate S GR, main-gref GR STgt Depth.
 
 :index (1)
 func main-gref gref, string, option int ->.
-main-gref GR STgt Depth :- class-def (class _ GR _), !,
+main-gref GR STgt Depth :- 
+  class-def (class _ GR _), !,
   private.mixins-in-structures [GR] MLSrc,
   main-from MLSrc STgt Depth.
 main-gref GR STgt Depth :-
@@ -24,7 +25,8 @@ main-gref GR STgt Depth :-
 :index (1)
 func main-from list mixinname, string, option int ->.
 main-from MLSrc STgt Depth :-
-  private.mixins-in-structures [{coq.locate STgt}] MLTgt,
+  coq.say "howto STgt" STgt,
+  private.mixins-in-structures [{coq.locate STgt}] MLTgt, 
   private.list-diff MLTgt MLSrc ML,
   if (ML = []) (coq.say "HB: nothing to do.") (main-from.aux MLSrc ML Depth).
 

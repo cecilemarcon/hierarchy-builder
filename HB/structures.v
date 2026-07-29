@@ -790,6 +790,7 @@ Elpi Accumulate lp:{{
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
+  coq.say "BodySkel" BodySkel "\nTyWPSkel" TyWPSkel,
   with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _)).
 main [T0, F0] :- !,
   coq.warning "HB" "HB.deprecated" "The syntax \"HB.instance Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
@@ -1513,21 +1514,72 @@ Elpi Accumulate File "HB/common/log.elpi".
 Elpi Accumulate File "HB/common/synthesis.elpi".
 Elpi Accumulate File "HB/context.elpi".
 Elpi Accumulate File "HB/instance.elpi".
+Elpi Accumulate File "HB/howto.elpi".
 Elpi Accumulate lp:{{
 
 :name "start"
 main [const-decl Name (some BodySkel) TyWPSkel] :- !,
-  coq.say "type given:" TyWPSkel,
-  with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _)).
-main [T0, F0] :- !,
-  coq.warning "HB" "HB.deprecated" "The syntax \"HB.instance Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
-  with-attributes (with-logging (instance.declare-existing T0 F0)).
+  coq.say "Proof: BodySkel:" BodySkel "TyWPSkel" TyWPSkel,
+  TyWPSkel = arity (app [global (STgt)|_]),
+  phant-abbrev STgt _ Abbrev,
+  coq.say "STgt" STgt "Abbrev" Abbrev,
+  Ddd is {coq.gref->id STgt},
+  coq.say "Ddd" Ddd,
+  % howto.main-from [] STgt none
+  % main-from MLSrc STgt Depth :-
+  %   private.mixins-in-structures [{coq.locate STgt}] MLTgt, 
+  %   private.list-diff MLTgt MLSrc ML,
 
+  howto.private.mixins-in-structures [{coq.locate Ddd }] MLTgt, 
+  howto.private.list-diff MLTgt [] ML,
+
+  coq.say "ML" ML,
+
+  % paths-from-for-step 
+  if (BodySkel = app [global (indc _Axioms) | _])
+    (coq.say "{| ... |}")
+    (with-attributes (with-logging (instance.declare-const Name BodySkel TyWPSkel _ _))).
+
+% main [str St, str _Sub | _Fields] :- 
+%   % parse-fields Fields PFields,
+%   % coq.say "St" St "Sub" Sub "PFields" PFields,
+%   coq.locate-all St LSt,
+%   % coq.say "LSt" LSt,
+%   LSt = [loc-abbreviation AbbrST | _],
+%   coq.notation.abbreviation-body AbbrST NArgs _,
+%   coq.notation.abbreviation AbbrST {coq.mk-n-holes NArgs} T,
+%   coq.safe-dest-app T (global GR) _,
+%   coq.say "F" GR,
+%   StAxioms is St ^ "Axioms_",
+%   coq.locate-all {coq.name->id {coq.string->name StAxioms } } L, 
+%   coq.say L.
+%   % _Name = {coq.name->id `_`}.
+
+% pred parse-fields i:list argument, o:list argument.
+% parse-fields [] [].
+% parse-fields [str ":="| Q] PQ :- 
+%   parse-fields Q PQ.
+% parse-fields [str "{|"| Q] PQ :- 
+%   parse-fields Q PQ.
+% parse-fields [str "|", str "}"] [].
+% parse-fields [H|Q] [H|PQ] :- parse-fields Q PQ.
+
+
+
+main [T0, F0] :- !,
+  coq.warning "HB" "HB.deprecated" "The syntax \"HB.proof Key FactoryInstance\" is deprecated, use \"HB.instance Definition\" instead",
+  with-attributes (with-logging (instance.declare-existing T0 F0)).
 }}.
 
 #[synterp] Elpi Accumulate lp:{{
   
+
 shorten coq.env.{ begin-section, end-section }.
+
+main [str _St, str _Sub | _] :- 
+  coq.say "TODO".
+  % SectionName is "hb_instance_" ^ {std.any->string {new_int} },
+  % begin-section SectionName, end-section.
 
 main [const-decl _ _ (arity _)] :- !.
 main [const-decl _ _ (parameter _ _ _ _)] :- !,

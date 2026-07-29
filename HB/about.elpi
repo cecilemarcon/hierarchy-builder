@@ -8,6 +8,7 @@ main S :-
   coq.locate-all S All,
   std.filter All (x\sigma gr a\ std.once (x = loc-gref gr ; x = loc-abbreviation a)) L,
   if (L = []) (coq.error "HB: unable to locate" S) true,
+  coq.say "L" L,
   std.forall L (about.main-located S).
 
 func main-located string, located ->.
@@ -22,12 +23,12 @@ main-located _ (loc-gref Class) :- %coq.say "tried 2",
   S is M ^ "." ^ St,
   private.main-structure S Class GR MLwP.
 
-main-located S (loc-gref (indt I)) :- %coq.say "tried 3", 
-  factory->constructor (indt I) _, !,
+main-located S (loc-gref (indt I)) :-  
+  factory->constructor (indt I) _, !, %coq.say "tried 3",
   private.main-factory S I.
 
-main-located S (loc-gref (const C)) :- %coq.say "tried 4", 
-  factory->constructor (const C) _, !,
+main-located S (loc-gref (const C)) :- % 
+  factory->constructor (const C) _, !, % coq.say "tried 4",
   private.main-factory-alias S C.
 
 main-located S (loc-gref (const C)) :- %coq.say "tried 5", 
